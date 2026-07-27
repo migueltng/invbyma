@@ -114,7 +114,7 @@ router.get('/history/:symbol', authenticate, async (req, res) => {
 
 router.get('/signals/:symbol', authenticate, async (req, res) => {
   try {
-    const range = req.query.range || '3mo';
+    const range = req.query.range || '1y';
     const history = await marketData.fetchHistory(req.params.symbol, range, '1d');
     if (!history || history.length < 30) {
       return res.status(400).json({ error: 'Datos insuficientes para analisis' });
@@ -137,9 +137,13 @@ router.get('/byma-quote/:symbol', authenticate, async (req, res) => {
   try {
     const quote = await marketData.fetchBymaQuote(req.params.symbol);
     res.json(quote);
-  } catch {
-    const quote = await marketData.fetchUSQuote(req.params.symbol);
-    res.json({ ...quote, note: 'No disponible en BYMA, cotizacion USD mostrada' });
+  } catch (e1) {
+    try {
+      const quote = await marketData.fetchUSQuote(req.params.symbol);
+      res.json({ ...quote, note: 'No disponible en BYMA, cotizacion USD mostrada' });
+    } catch {
+      res.status(404).json({ error: 'Simbolo no encontrado ni en BYMA ni en USD', symbol: req.params.symbol });
+    }
   }
 });
 

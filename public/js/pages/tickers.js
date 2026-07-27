@@ -100,8 +100,9 @@ const TickersPage = {
         return;
       }
 
+      const bymaExchanges = ['BA', 'BCBA', 'BUE'];
       resultsDiv.innerHTML = combined.map(r => {
-        const isBymaBA = r.exchange === 'BA';
+        const isBymaBA = bymaExchanges.includes(r.exchange);
         const isCedearWithByma = r.bymaAvailable;
         const isPlainUS = !isBymaBA && !isCedearWithByma;
 
@@ -167,8 +168,8 @@ const TickersPage = {
     try {
       const [quote, signals, history] = await Promise.all([
         API.getBymaQuote(symbol),
-        API.getSignals(symbol, '3mo').catch(() => null),
-        API.getHistory(symbol, '3mo', '1d').catch(() => [])
+        API.getSignals(symbol, '1y').catch(() => null),
+        API.getHistory(symbol, '1y', '1d').catch(() => [])
       ]);
 
       const exchangeLabel = quote.exchange === 'BA' ? 'BYMA' : 'USD';

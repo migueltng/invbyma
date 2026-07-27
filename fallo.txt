@@ -1,11 +1,12 @@
-Diagnóstico
-
-The deployment is failing because the Entry File configuration mismatch: the system is configured to use server.js as the entry point, but the actual application entry point is src/index.js (as defined in package.json's "main" field and the project structure). The build completed successfully with no vulnerabilities, so the issue is purely a configuration mismatch causing the runtime to fail when trying to start the application.
-
-Solución
-
-Note: Express framework does not support Entry File configuration (null value), so the system uses the default behavior. The mismatch between the configured server.js and actual entry point src/index.js is causing the failure.
-
-Ensure your deployment system starts the application using: npm start (which correctly runs node src/index.js as defined in package.json)
-If your deployment platform allows custom start commands, use the npm start script instead of trying to directly execute a server.js file
-Verify that the deployment environment is using the start script from package.json rather than looking for a server.js file
+{"timestamp":"2026-07-27T12:51:38.575Z","level":"INFO","category":"SERVER","message":"Servidor iniciado en http://0.0.0.0:3001"}
+{"timestamp":"2026-07-27T12:51:38.578Z","level":"INFO","category":"MONITOR","message":"Monitor iniciado"}
+{"timestamp":"2026-07-27T12:51:38.594Z","level":"INFO","category":"HTTP","message":"GET / 404 8ms"}
+{"timestamp":"2026-07-27T12:52:06.894Z","level":"INFO","category":"SERVER","message":"Servidor iniciado en http://0.0.0.0:3001"}
+{"timestamp":"2026-07-27T12:52:06.898Z","level":"INFO","category":"MONITOR","message":"Monitor iniciado"}
+{"timestamp":"2026-07-27T12:52:06.930Z","level":"ERROR","category":"AUTH","message":"Error en login: Access denied for user 'root'@'::1' (using password: NO)"}
+{"timestamp":"2026-07-27T12:52:06.933Z","level":"INFO","category":"HTTP","message":"POST /api/auth/login 500 20ms"}
+{"timestamp":"2026-07-27T13:00:00.347Z","level":"INFO","category":"MONITOR","message":"Ejecutando monitoreo de analisis..."}
+{"timestamp":"2026-07-27T13:00:00.351Z","level":"ERROR","category":"MONITOR","message":"Error en monitor: Access denied for user 'root'@'::1' (using password: NO)"}
+{"timestamp":"2026-07-27T13:00:03.244Z","level":"INFO","category":"HTTP","message":"GET /api/healt 404 2ms"}
+{"timestamp":"2026-07-27T13:00:03.611Z","level":"INFO","category":"HTTP","message":"GET /favicon.ico 404 3ms"}
+{"timestamp":"2026-07-27T13:00:21.311Z","level":"INFO","category":"HTTP","message":"GET /api/login 404 1ms"}

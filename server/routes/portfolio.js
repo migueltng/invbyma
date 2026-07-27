@@ -118,4 +118,30 @@ router.post('/:id/sell', authenticate, async (req, res) => {
   }
 });
 
+router.post('/:id/buy', authenticate, async (req, res) => {
+  try {
+    const { quantity, price, purchase_date } = req.body;
+    if (!quantity || !price) return res.status(400).json({ error: 'quantity y price requeridos' });
+    const [positions] = await pool.execute(
+      'SELECT * FROM portfolio_positions WHERE id = ? AND user_id = ?',
+      [req.params.id, req.user.id]
+    );
+    if (positions.length === 0) return res.status(404).json({ error: 'Posicion no encontrada' });
+    const pos = positions[0];
+    const currentQty = parseFloat(pos.quantity);
+    const currentAvg = parseFloat(pos.avg_cost_ars);
+    const newQty = parseFloat(quantity);
+    const newPrice = parseFloat(price);
+    const totalQty = currentQty + newQty;
+    const newAvg = ((currentQty * currentAvg) + (newQty * newPrice)) / totalQty;
+    await pool.execute(
+      'UPDATE portfolio_positions SET quantity = ?, avg_cost_ars = ? WHERE id = ?',
+      [totalQty, newAvg, req.params.id]
+    );
+    res.json({ message: 'Compra registrada, precio promedio actualizado', newAvg, totalQty });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

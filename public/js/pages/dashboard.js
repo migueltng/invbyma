@@ -7,14 +7,14 @@ const DashboardPage = {
         API.getUsdArs().catch(() => ({ oficialBuy: 0, oficialSell: 0, blueBuy: 0, blueSell: 0 }))
       ]);
 
-      const sorted = quotes.sort((a, b) => Math.abs(b.changePercent) - Math.abs(a.changePercent));
-      const gainers = sorted.filter(q => q.changePercent > 0);
-      const losers = sorted.filter(q => q.changePercent < 0);
+      const gainers = quotes.filter(q => q.changePercent > 0).sort((a, b) => b.changePercent - a.changePercent);
+      const losers = quotes.filter(q => q.changePercent < 0).sort((a, b) => a.changePercent - b.changePercent);
       const topGainers = gainers.slice(0, 5);
       const topLosers = losers.slice(0, 5);
       const advancers = gainers.length;
       const decliners = losers.length;
       const pctPositive = quotes.length ? (advancers / quotes.length * 100).toFixed(0) : 0;
+      const sorted = quotes.sort((a, b) => Math.abs(b.changePercent || 0) - Math.abs(a.changePercent || 0));
       const marketSentiment = pctPositive >= 60 ? 'ALCISTA' : pctPositive <= 40 ? 'BAJISTA' : 'NEUTRO';
       const sentimentBadge = marketSentiment === 'ALCISTA' ? 'bg-success' : marketSentiment === 'BAJISTA' ? 'bg-danger' : 'bg-secondary';
       const totalVol = sorted.reduce((s, q) => s + (q.volume || 0), 0);

@@ -4,7 +4,7 @@
 ```bash
 cd server && npm start
 ```
-Server on `http://127.0.0.1:3001`. Config in `.env` (DB, JWT, Telegram, NVIDIA API).
+Server on `http://0.0.0.0:3001`. Config in `.env` (DB, JWT, Telegram, NVIDIA API).
 
 ## Init DB (first-time only)
 ```bash

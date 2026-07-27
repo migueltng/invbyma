@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 const logger = require('./services/logger');
@@ -55,6 +56,7 @@ app.get('/api/health', (req, res) => {
 });
 
 const frontendDir = path.join(__dirname, '..', 'public');
+console.log(__dirname);
 app.use(express.static(frontendDir));
 app.get('*', (req, res) => {
   if (req.path.startsWith('/api')) return res.status(404).json({ error: 'Ruta no encontrada' });
@@ -71,7 +73,7 @@ process.on('unhandledRejection', (reason) => {
 });
 
 const PORT = process.env.PORT || 3001;
-const HOST = process.env.HOST || '127.0.0.1';
+const HOST = process.env.HOST || '0.0.0.0';
 
 const server = app.listen(PORT, HOST, () => {
   console.log(`BYMA Dashboard corriendo en http://${HOST}:${PORT}`);

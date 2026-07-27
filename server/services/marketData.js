@@ -4,7 +4,7 @@ const CACHE_DURATION = 5 * 60 * 1000;
 let usdArsCache = { value: null, timestamp: 0 };
 
 function toYahooSymbol(symbol) {
-  return symbol.toUpperCase() + '.BA';
+  return symbol.toUpperCase().replace(/\.BA$/, '') + '.BA';
 }
 
 function toUSSymbol(symbol) {
@@ -21,16 +21,20 @@ async function fetchQuote(symbol) {
   const meta = result.meta;
   const quote = result.indicators.quote[0];
   const idx = quote.close.length - 1;
+  const price = quote.close[idx] || meta.previousClose || 0;
+  const prevClose = meta.previousClose || meta.chartPreviousClose || quote.open[idx] || price;
+  const change = price - prevClose;
+  const changePercent = prevClose ? (change / prevClose * 100) : 0;
   return {
     symbol: symbol.toUpperCase(),
-    price: quote.close[idx] || meta.previousClose,
-    previousClose: meta.previousClose,
-    change: (quote.close[idx] || meta.previousClose) - meta.previousClose,
-    changePercent: ((quote.close[idx] || meta.previousClose) - meta.previousClose) / meta.previousClose * 100,
-    high: quote.high[idx],
-    low: quote.low[idx],
-    volume: quote.volume[idx],
-    open: quote.open[idx],
+    price,
+    previousClose: prevClose || 0,
+    change,
+    changePercent,
+    high: quote.high[idx] || 0,
+    low: quote.low[idx] || 0,
+    volume: quote.volume[idx] || 0,
+    open: quote.open[idx] || 0,
     exchange: 'BA',
     currency: 'ARS'
   };
@@ -46,23 +50,28 @@ async function fetchUSQuote(symbol) {
   const meta = result.meta;
   const quote = result.indicators.quote[0];
   const idx = quote.close.length - 1;
+  const price = quote.close[idx] || meta.previousClose || 0;
+  const prevClose = meta.previousClose || meta.chartPreviousClose || quote.open[idx] || price;
+  const change = price - prevClose;
+  const changePercent = prevClose ? (change / prevClose * 100) : 0;
   return {
     symbol: symbol.toUpperCase(),
-    price: quote.close[idx] || meta.previousClose,
-    previousClose: meta.previousClose,
-    change: (quote.close[idx] || meta.previousClose) - meta.previousClose,
-    changePercent: ((quote.close[idx] || meta.previousClose) - meta.previousClose) / meta.previousClose * 100,
-    high: quote.high[idx],
-    low: quote.low[idx],
-    volume: quote.volume[idx],
-    open: quote.open[idx],
+    price,
+    previousClose: prevClose || 0,
+    change,
+    changePercent,
+    high: quote.high[idx] || 0,
+    low: quote.low[idx] || 0,
+    volume: quote.volume[idx] || 0,
+    open: quote.open[idx] || 0,
     exchange: 'US',
     currency: 'USD'
   };
 }
 
 async function fetchBymaQuote(symbol) {
-  const yahooSymbol = symbol.toUpperCase() + '.BA';
+  const cleanSymbol = symbol.toUpperCase().replace(/\.BA$/, '');
+  const yahooSymbol = cleanSymbol + '.BA';
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?interval=1d&range=1d`;
   const { data } = await axios.get(url, {
     headers: { 'User-Agent': 'Mozilla/5.0' }
@@ -71,29 +80,41 @@ async function fetchBymaQuote(symbol) {
   const meta = result.meta;
   const quote = result.indicators.quote[0];
   const idx = quote.close.length - 1;
+  const price = quote.close[idx] || meta.previousClose || 0;
+  const prevClose = meta.previousClose || meta.chartPreviousClose || quote.open[idx] || price;
+  const change = price - prevClose;
+  const changePercent = prevClose ? (change / prevClose * 100) : 0;
   return {
     symbol: symbol.toUpperCase(),
     bymaSymbol: yahooSymbol,
-    price: quote.close[idx] || meta.previousClose,
-    previousClose: meta.previousClose,
-    change: (quote.close[idx] || meta.previousClose) - meta.previousClose,
-    changePercent: ((quote.close[idx] || meta.previousClose) - meta.previousClose) / meta.previousClose * 100,
-    high: quote.high[idx],
-    low: quote.low[idx],
-    volume: quote.volume[idx],
-    open: quote.open[idx],
+    price,
+    previousClose: prevClose || 0,
+    change,
+    changePercent,
+    high: quote.high[idx] || 0,
+    low: quote.low[idx] || 0,
+    volume: quote.volume[idx] || 0,
+    open: quote.open[idx] || 0,
     exchange: 'BA',
     currency: 'ARS'
   };
 }
 
 async function fetchHistory(symbol, range = '1mo', interval = '1d') {
-  const yahooSymbol = toYahooSymbol(symbol);
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?interval=${interval}&range=${range}`;
-  const { data } = await axios.get(url, {
-    headers: { 'User-Agent': 'Mozilla/5.0' }
-  });
-  const result = data.chart.result[0];
+  const cleanSymbol = symbol.toUpperCase().replace(/\.BA$/, '');
+  let result;
+  for (const suffix of ['.BA', '']) {
+    try {
+      const yahooSymbol = cleanSymbol + suffix;
+      const url = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?interval=${interval}&range=${range}`;
+      const { data } = await axios.get(url, {
+        headers: { 'User-Agent': 'Mozilla/5.0' }
+      });
+      result = data.chart.result[0];
+      break;
+    } catch { continue; }
+  }
+  if (!result) throw new Error('No se encontraron datos historicos para ' + symbol);
   const timestamps = result.timestamp;
   const quote = result.indicators.quote[0];
   const adjClose = result.indicators.adjclose ? result.indicators.adjclose[0].adjclose : null;
@@ -142,12 +163,22 @@ async function searchYahoo(query) {
   const { data } = await axios.get(url, {
     headers: { 'User-Agent': 'Mozilla/5.0' }
   });
-  return data.quotes.filter(q => q.exchange === 'BA' || q.exchange === 'NMS' || q.exchange === 'NASDAQ' || q.exchange === 'NYSE').map(q => ({
-    symbol: q.symbol,
+  const knownExchanges = ['BA', 'BCBA', 'BUE', 'NMS', 'NASDAQ', 'NYSE', 'NYQ', 'PCX', 'OQR'];
+  let results = data.quotes.filter(q => knownExchanges.includes(q.exchange)).map(q => ({
+    symbol: q.exchange === 'BA' || q.exchange === 'BCBA' || q.exchange === 'BUE' ? q.symbol.replace(/\.BA$/i, '') : q.symbol,
     name: q.shortname || q.longname || q.symbol,
     exchange: q.exchange,
     type: q.quoteType || 'EQUITY'
   }));
+  if (results.length === 0) {
+    results = data.quotes.filter(q => q.quoteType === 'EQUITY').slice(0, 15).map(q => ({
+      symbol: q.symbol,
+      name: q.shortname || q.longname || q.symbol,
+      exchange: q.exchange,
+      type: 'EQUITY'
+    }));
+  }
+  return results;
 }
 
 async function cedearsSearch(query) {
@@ -174,7 +205,10 @@ async function cedearsSearch(query) {
         const meta = usData.chart.result[0].meta;
         const quote = usData.chart.result[0].indicators.quote[0];
         const idx = quote.close.length - 1;
-        return { ...result, bymaAvailable: false, usdPrice: quote.close[idx] || meta.previousClose, usdChange: ((quote.close[idx] || meta.previousClose) - meta.previousClose) / meta.previousClose * 100 };
+        const usdPrice = quote.close[idx] || meta.previousClose || 0;
+        const usdPrevClose = meta.previousClose || meta.chartPreviousClose || quote.open[idx] || usdPrice;
+        const usdChange = usdPrevClose ? (usdPrice - usdPrevClose) / usdPrevClose * 100 : 0;
+        return { ...result, bymaAvailable: false, usdPrice, usdChange };
       } catch {
         return { ...result, bymaAvailable: false, usdPrice: null };
       }

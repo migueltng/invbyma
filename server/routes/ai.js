@@ -9,7 +9,10 @@ router.post('/chat', authenticate, async (req, res) => {
     const { message, context } = req.body;
     if (!message) return res.status(400).json({ error: 'Mensaje requerido' });
 
-    const apiKey = process.env.NVIDIA_API_KEY || 'nvapi-key';
+    const apiKey = process.env.NVIDIA_API_KEY;
+    if (!apiKey) {
+      return res.status(503).json({ error: 'IA no disponible: NVIDIA_API_KEY no configurada en .env', hint: 'Obten una key en https://build.nvidia.com/' });
+    }
     const url = process.env.NVIDIA_API_URL || 'https://integrate.api.nvidia.com/v1/chat/completions';
 
     const systemPrompt = `Eres un asistente especializado en el mercado de capitales argentino (BYMA). 
@@ -18,19 +21,20 @@ y decisiones de trading. Proporciona respuestas concisas y basadas en datos.`;
     const userContext = context ? `Contexto actual del mercado: ${JSON.stringify(context)}\n\n` : '';
 
     const { data } = await axios.post(url, {
-      model: 'nvidia/llama-3.1-nemotron-70b-instruct',
+      model: 'nvidia/nemotron-3-super-120b-a12b',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userContext + message }
       ],
-      temperature: 0.7,
-      max_tokens: 1024
+      temperature: 1,
+      top_p: 0.95,
+      max_tokens: 16384
     }, {
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json'
       },
-      timeout: 30000
+      timeout: 60000
     });
 
     res.json({ response: data.choices[0].message.content });
