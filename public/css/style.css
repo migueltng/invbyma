@@ -1,0 +1,303 @@
+:root {
+  --bg-dark: #0d1117;
+  --bg-card: #1c2333;
+  --bg-card-hover: #243044;
+  --accent: #58a6ff;
+  --accent-light: #79c0ff;
+  --accent-soft: #1a3a5c;
+  --danger: #f85149;
+  --danger-soft: #3d1f1e;
+  --success: #3fb950;
+  --success-soft: #1b3a22;
+  --warning: #d29922;
+  --warning-soft: #3d2e00;
+  --text-primary: #f0f6fc;
+  --text-secondary: #b0b8c0;
+  --border-color: #3d444d;
+  --input-bg: #151b23;
+  --navbar-bg: #151b23;
+  --navbar-text: #f0f6fc;
+}
+
+body {
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+.navbar {
+  background-color: var(--navbar-bg) !important;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.navbar-brand, .navbar-nav .nav-link {
+  color: var(--navbar-text) !important;
+}
+
+.navbar-nav .nav-link:hover {
+  color: #fff !important;
+}
+
+.navbar-toggler {
+  border-color: var(--border-color);
+}
+
+.card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  margin-bottom: 1rem;
+}
+
+.card-header {
+  background-color: transparent;
+  border-bottom: 1px solid var(--border-color);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.table {
+  color: var(--text-primary);
+  --bs-table-bg: transparent;
+  --bs-table-hover-bg: #1c2333;
+}
+
+.table th {
+  border-bottom: 2px solid var(--border-color);
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.5px;
+}
+
+.table td {
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+  color: #f0f6fc;
+}
+
+.form-control, .form-select, .input-group-text {
+  background-color: var(--input-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.form-control:focus, .form-select:focus {
+  background-color: var(--input-bg);
+  border-color: var(--accent);
+  color: var(--text-primary);
+  box-shadow: 0 0 0 0.2rem rgba(88, 166, 255, 0.15);
+}
+
+.btn-primary {
+  background-color: #238636;
+  border-color: #238636;
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background-color: #2ea043;
+  border-color: #2ea043;
+  color: #fff;
+}
+
+.btn-outline-primary {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: #0d1117;
+}
+
+.btn-danger {
+  background-color: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+
+.btn-outline-danger {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.btn-outline-danger:hover {
+  background-color: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+
+.btn-success {
+  background-color: var(--success);
+  border-color: var(--success);
+  color: #fff;
+}
+
+.btn-outline-success {
+  color: var(--success);
+  border-color: var(--success);
+}
+
+.btn-outline-success:hover {
+  background-color: var(--success);
+  border-color: var(--success);
+  color: #0d1117;
+}
+
+.btn-outline-info {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.btn-outline-info:hover {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: #0d1117;
+}
+
+.btn-outline-secondary {
+  color: var(--text-secondary);
+  border-color: var(--border-color);
+}
+
+.btn-outline-secondary:hover {
+  background-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.btn-outline-warning {
+  color: var(--warning);
+  border-color: var(--warning);
+}
+
+.btn-outline-warning:hover {
+  background-color: var(--warning);
+  color: #0d1117;
+}
+
+.text-success { color: #4ade80 !important; }
+.text-danger { color: #f87171 !important; }
+.text-warning { color: var(--warning) !important; }
+
+.bg-success { background-color: #238636 !important; color: #fff !important; }
+.bg-danger { background-color: #da3633 !important; color: #fff !important; }
+.bg-warning { background-color: #d29922 !important; color: #0d1117 !important; }
+.bg-info { background-color: #1f6feb !important; color: #fff !important; }
+.bg-secondary { background-color: #484f58 !important; color: #fff !important; }
+.bg-primary { background-color: #238636 !important; color: #fff !important; }
+
+.badge { font-weight: 500; }
+
+.modal-content {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+}
+
+.modal-header {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modal-footer {
+  border-top: 1px solid var(--border-color);
+}
+
+.modal-header .btn-close {
+  filter: invert(0.8);
+}
+
+.list-group-item {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.ticker-price { font-size: 1.5rem; font-weight: 700; }
+.ticker-change { font-size: 0.9rem; }
+.ticker-symbol { font-weight: 600; color: var(--accent); }
+
+.alert-neutral { border-left: 4px solid var(--text-secondary); }
+.alert-buy { border-left: 4px solid var(--success); }
+.alert-sell { border-left: 4px solid var(--danger); }
+
+#chartContainer { border-radius: 12px; overflow: hidden; }
+
+.dropdown-menu {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+}
+
+.dropdown-item {
+  color: var(--text-primary);
+}
+
+.dropdown-item:hover {
+  background-color: #1c2333;
+  color: var(--text-primary);
+}
+
+a { color: var(--accent); }
+a:hover { color: var(--accent-light); }
+
+::placeholder { color: #6e7681 !important; }
+
+small, .small, .text-muted {
+  color: #c8d0d8 !important;
+  opacity: 0.9;
+}
+
+.card-body strong, .card-body .fw-bold {
+  color: #f0f6fc;
+}
+
+.card .card {
+  background-color: #151b23;
+}
+
+.card .card .d-flex span:first-child {
+  color: #8b949e;
+}
+
+.card .card .d-flex span:last-child {
+  color: #f0f6fc;
+}
+
+.card .badge {
+  font-size: 0.72rem;
+  padding: 0.25em 0.6em;
+}
+
+#aiMessages .badge {
+  max-width: 80%;
+  text-align: left;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.nav-tabs .nav-link {
+  color: var(--text-secondary);
+  border: none;
+}
+
+.nav-tabs .nav-link.active {
+  color: var(--text-primary);
+  background-color: transparent;
+  border-bottom: 2px solid var(--accent);
+}
+
+.nav-tabs .nav-link:hover {
+  color: var(--text-primary);
+  border-color: transparent;
+}
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-dark); }
+::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #484f58; }
+
+@media (max-width: 768px) {
+  .container-fluid { padding: 0.5rem; }
+  .ticker-price { font-size: 1.2rem; }
+}
