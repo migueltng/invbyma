@@ -19,19 +19,45 @@ const DashboardPage = {
       const sentimentBadge = marketSentiment === 'ALCISTA' ? 'bg-success' : marketSentiment === 'BAJISTA' ? 'bg-danger' : 'bg-secondary';
       const totalVol = sorted.reduce((s, q) => s + (q.volume || 0), 0);
 
-      let rows = sorted.map(q => `
-        <tr>
-          <td><a href="#/tickers?q=${q.symbol}" class="ticker-symbol text-decoration-none">${q.symbol}</a></td>
-          <td class="ticker-price">$${q.price?.toFixed(2)}</td>
-          <td class="${q.change >= 0 ? 'text-success' : 'text-danger'} ticker-change">
-            ${q.change >= 0 ? '+' : ''}${q.change?.toFixed(2)} (${q.changePercent?.toFixed(2)}%)
-          </td>
-          <td>$${q.open?.toFixed(2)}</td>
-          <td>$${q.high?.toFixed(2)}</td>
-          <td>$${q.low?.toFixed(2)}</td>
-          <td>${q.volume?.toLocaleString()}</td>
-        </tr>
-      `).join('');
+      const typeOrder = ['ACCION', 'CEDEAR', 'BONO', 'ETF'];
+      const groups = {};
+      for (const t of typeOrder) groups[t] = [];
+      for (const q of sorted) {
+        const t = q.type || 'ACCION';
+        if (groups[t]) groups[t].push(q);
+        else groups[t] = [q];
+      }
+
+      const tableCard = (title, icon, items) => {
+        if (!items || !items.length) return '';
+        const rows = items.map(q => `
+          <tr>
+            <td><a href="#/tickers?q=${q.symbol}" class="ticker-symbol text-decoration-none">${q.symbol}</a></td>
+            <td class="ticker-price">$${q.price?.toFixed(2)}</td>
+            <td class="${q.change >= 0 ? 'text-success' : 'text-danger'} ticker-change">
+              ${q.change >= 0 ? '+' : ''}${q.change?.toFixed(2)} (${q.changePercent?.toFixed(2)}%)
+            </td>
+            <td>$${q.open?.toFixed(2)}</td>
+            <td>$${q.high?.toFixed(2)}</td>
+            <td>$${q.low?.toFixed(2)}</td>
+            <td>${q.volume?.toLocaleString()}</td>
+          </tr>
+        `).join('');
+        return `
+          <div class="card mb-3">
+            <div class="card-header"><i class="bi ${icon}"></i> ${title} (${items.length})</div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                  <thead><tr>
+                    <th>Simbolo</th><th>Precio</th><th>Cambio</th><th>Apertura</th><th>Maximo</th><th>Minimo</th><th>Volumen</th>
+                  </tr></thead>
+                  <tbody>${rows}</tbody>
+                </table>
+              </div>
+            </div>
+          </div>`;
+      };
 
       const html = `
         <div class="row mb-2">
@@ -106,19 +132,10 @@ const DashboardPage = {
             </div>
           </div>
         </div>
-        <div class="card">
-          <div class="card-header"><i class="bi bi-table"></i> Cotizaciones</div>
-          <div class="card-body p-0">
-            <div class="table-responsive">
-              <table class="table table-hover mb-0">
-                <thead><tr>
-                  <th>Simbolo</th><th>Precio</th><th>Cambio</th><th>Apertura</th><th>Maximo</th><th>Minimo</th><th>Volumen</th>
-                </tr></thead>
-                <tbody>${rows}</tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+        ${tableCard('Acciones', 'bi-graph-up', groups['ACCION'])}
+        ${tableCard('CEDEARs', 'bi-globe', groups['CEDEAR'])}
+        ${tableCard('Bonos', 'bi-file-earmark-text', groups['BONO'])}
+        ${tableCard('ETFs', 'bi-box', groups['ETF'])}
       `;
       App.render(html);
     } catch (err) {

@@ -92,9 +92,10 @@ router.get('/quotes', authenticate, async (req, res) => {
 
 router.get('/all-quotes', authenticate, async (req, res) => {
   try {
-    const [tickers] = await pool.execute('SELECT symbol FROM tickers WHERE is_active = 1');
+    const [tickers] = await pool.execute('SELECT symbol, type FROM tickers WHERE is_active = 1');
     const results = await Promise.allSettled(tickers.map(t => marketData.fetchQuote(t.symbol)));
-    const quotes = results.filter(r => r.status === 'fulfilled').map(r => r.value);
+    const typeMap = Object.fromEntries(tickers.map(t => [t.symbol, t.type]));
+    const quotes = results.filter(r => r.status === 'fulfilled').map(r => ({ ...r.value, type: typeMap[r.value.symbol] || 'ACCION' }));
     res.json(quotes);
   } catch (err) {
     res.status(500).json({ error: err.message });

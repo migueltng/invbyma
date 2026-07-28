@@ -28,9 +28,10 @@ router.post('/login', async (req, res) => {
       logger.auth(`Login fallido: ${username} password incorrecto`);
       return res.status(401).json({ error: 'Credenciales invalidas' });
     }
+    if (!process.env.JWT_SECRET) return res.status(500).json({ error: 'JWT_SECRET no configurado en .env' });
     const token = jwt.sign(
       { id: user.id, username: user.username, role: user.role },
-      process.env.JWT_SECRET || 'secret',
+      process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
     logger.auth(`Login exitoso: ${username}`);

@@ -30,9 +30,10 @@ router.put('/users/:id/toggle-active', async (req, res) => {
 
 router.put('/users/:id/reset-password', async (req, res) => {
   try {
-    const hashed = await bcrypt.hash('123456', 10);
+    const tempPassword = Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 6).toUpperCase();
+    const hashed = await bcrypt.hash(tempPassword, 10);
     await pool.execute('UPDATE users SET password = ? WHERE id = ?', [hashed, req.params.id]);
-    res.json({ message: 'Password reseteado a 123456' });
+    res.json({ message: 'Password reseteado', tempPassword });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

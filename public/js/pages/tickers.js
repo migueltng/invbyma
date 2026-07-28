@@ -274,6 +274,25 @@ const TickersPage = {
   renderChart(history, signals) {
     const container = document.getElementById('chartContainer');
     if (!container) return;
+
+    const controls = document.createElement('div');
+    controls.className = 'd-flex flex-wrap gap-3 mb-2';
+    controls.innerHTML = `
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="checkbox" id="chkSMA20" checked>
+        <label class="form-check-label" for="chkSMA20" style="color:#e91e63">SMA 20</label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="checkbox" id="chkSMA50" checked>
+        <label class="form-check-label" for="chkSMA50" style="color:#2196f3">SMA 50</label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="checkbox" id="chkSMA200" checked>
+        <label class="form-check-label" for="chkSMA200" style="color:#ff9800">SMA 200</label>
+      </div>
+    `;
+    container.parentNode.insertBefore(controls, container);
+
     const chart = LightweightCharts.createChart(container, {
       layout: { background: { color: '#1a1a2e' }, textColor: '#a0a0a0' },
       grid: { vertLines: { color: '#2a2a4a' }, horzLines: { color: '#2a2a4a' } },
@@ -294,6 +313,47 @@ const TickersPage = {
       close: d.close
     }));
     candlestickSeries.setData(data);
+
+    const closes = history.map(d => d.close);
+
+    const sma = (data, period) => {
+      const result = [];
+      for (let i = 0; i < data.length; i++) {
+        if (i < period - 1) { result.push(null); continue; }
+        let sum = 0;
+        for (let j = i - period + 1; j <= i; j++) sum += data[j];
+        result.push(sum / period);
+      }
+      return result;
+    };
+
+    const toLineData = (arr) => history.map((d, i) => ({ time: d.date, value: arr[i] }));
+
+    const sma20Series = chart.addLineSeries({
+      color: '#e91e63', lineWidth: 1, priceLineVisible: false, lastValueVisible: false
+    });
+    sma20Series.setData(toLineData(sma(closes, 20)));
+
+    const sma50Series = chart.addLineSeries({
+      color: '#2196f3', lineWidth: 1, priceLineVisible: false, lastValueVisible: false
+    });
+    sma50Series.setData(toLineData(sma(closes, 50)));
+
+    const sma200Series = chart.addLineSeries({
+      color: '#ff9800', lineWidth: 1, priceLineVisible: false, lastValueVisible: false
+    });
+    sma200Series.setData(toLineData(sma(closes, 200)));
+
+    document.getElementById('chkSMA20').addEventListener('change', e => {
+      sma20Series.applyOptions({ visible: e.target.checked });
+    });
+    document.getElementById('chkSMA50').addEventListener('change', e => {
+      sma50Series.applyOptions({ visible: e.target.checked });
+    });
+    document.getElementById('chkSMA200').addEventListener('change', e => {
+      sma200Series.applyOptions({ visible: e.target.checked });
+    });
+
     chart.timeScale().fitContent();
   }
 };
