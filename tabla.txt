@@ -1,0 +1,12 @@
+CREATE TABLE portfolio_sales (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  ticker_id INT NOT NULL,
+  symbol VARCHAR(20) NOT NULL,
+  quantity DECIMAL(15,4) NOT NULL,
+  purchase_price_ars DECIMAL(15,4) NOT NULL,
+  sale_price_ars DECIMAL(15,4) NOT NULL,
+  avg_cost_ars DECIMAL(15,4) NOT NULL,
+  purchase_date DATE NOT NULL,
+  notes TEXT DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);

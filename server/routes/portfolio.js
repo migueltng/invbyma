@@ -98,21 +98,34 @@ router.delete('/:id', authenticate, async (req, res) => {
 
 router.post('/:id/sell', authenticate, async (req, res) => {
   try {
-    const { quantity } = req.body;
+    const { quantity, price, sale_date } = req.body;
+    if (!quantity || !price) {
+      return res.status(400).json({ error: 'quantity y price requeridos' });
+    }
     const [positions] = await pool.execute(
-      'SELECT * FROM portfolio_positions WHERE id = ? AND user_id = ? ORDER BY purchase_date ASC',
+      `SELECT p.*, t.symbol, t.name as ticker_name
+       FROM portfolio_positions p
+       JOIN tickers t ON p.ticker_id = t.id
+       WHERE p.id = ? AND p.user_id = ?`,
       [req.params.id, req.user.id]
     );
     if (positions.length === 0) return res.status(404).json({ error: 'Posicion no encontrada' });
     const pos = positions[0];
     const remaining = parseFloat(pos.quantity) - parseFloat(quantity);
     if (remaining < 0) return res.status(400).json({ error: 'Cantidad insuficiente' });
+
+    await pool.execute(
+      `INSERT INTO portfolio_sales (user_id, ticker_id, symbol, quantity, purchase_price_ars, sale_price_ars, avg_cost_ars, purchase_date, sale_date)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [req.user.id, pos.ticker_id, pos.symbol, quantity, pos.avg_cost_ars, price, pos.avg_cost_ars, pos.purchase_date, sale_date || new Date().toISOString().slice(0, 10)]
+    );
+
     if (remaining === 0) {
       await pool.execute('DELETE FROM portfolio_positions WHERE id = ?', [pos.id]);
     } else {
       await pool.execute('UPDATE portfolio_positions SET quantity = ? WHERE id = ?', [remaining, pos.id]);
     }
-    res.json({ message: 'Venta registrada (FIFO)' });
+    res.json({ message: 'Venta registrada' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -139,6 +152,23 @@ router.post('/:id/buy', authenticate, async (req, res) => {
       [totalQty, newAvg, req.params.id]
     );
     res.json({ message: 'Compra registrada, precio promedio actualizado', newAvg, totalQty });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/portfolio/sales - List all sales chronologically
+router.get('/sales', authenticate, async (req, res) => {
+  try {
+    const [sales] = await pool.execute(
+      `SELECT s.*, t.symbol, t.name as ticker_name
+       FROM portfolio_sales s
+       JOIN tickers t ON s.ticker_id = t.id
+       WHERE s.user_id = ?
+       ORDER BY s.sale_date DESC, s.created_at DESC`,
+      [req.user.id]
+    );
+    res.json(sales);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

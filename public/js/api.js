@@ -94,8 +94,9 @@ const API = (() => {
     addPosition: (data) => request('POST', '/portfolio', data),
     updatePosition: (id, data) => request('PUT', '/portfolio/' + id, data),
     deletePosition: (id) => request('DELETE', '/portfolio/' + id),
-    sellPosition: (id, quantity) => request('POST', '/portfolio/' + id + '/sell', { quantity }),
+    sellPosition: (id, quantity, price, sale_date) => request('POST', '/portfolio/' + id + '/sell', { quantity, price, sale_date }),
     buyMore: (id, quantity, price) => request('POST', '/portfolio/' + id + '/buy', { quantity, price }),
+    getSales: () => request('GET', '/portfolio/sales'),
 
     aiChat: (message, context) => request('POST', '/ai/chat', { message, context }),
 

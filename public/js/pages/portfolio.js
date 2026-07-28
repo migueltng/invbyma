@@ -1,9 +1,10 @@
 const PortfolioPage = {
   async render() {
     try {
-      const [data, tickers] = await Promise.all([
+      const [data, tickers, sales] = await Promise.all([
         API.getPortfolio(),
-        API.getTickers()
+        API.getTickers(),
+        API.getSales()
       ]);
 
       const { positions, summary } = data;
@@ -25,7 +26,7 @@ const PortfolioPage = {
           </td>
           <td>
             <button class="btn btn-sm btn-outline-info buy-more me-1" data-id="${p.id}" data-symbol="${p.symbol}" data-qty="${p.quantity}" data-avg="${p.avg_cost}"><i class="bi bi-cart-plus"></i></button>
-            <button class="btn btn-sm btn-outline-success sell-pos me-1" data-id="${p.id}" data-symbol="${p.symbol}" data-qty="${p.quantity}"><i class="bi bi-cash"></i></button>
+            <button class="btn btn-sm btn-outline-success sell-pos me-1" data-id="${p.id}" data-symbol="${p.symbol}" data-qty="${p.quantity}" data-avg="${p.avg_cost}"><i class="bi bi-cash"></i></button>
             <button class="btn btn-sm btn-outline-danger delete-pos" data-id="${p.id}"><i class="bi bi-trash"></i></button>
           </td>
         </tr>
