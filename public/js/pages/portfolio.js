@@ -1,15 +1,17 @@
 const PortfolioPage = {
   async render() {
     try {
-      const [data, tickers] = await Promise.all([
+      const [data, tickers, salesRaw] = await Promise.all([
         API.getPortfolio(),
-        API.getTickers()
+        API.getTickers(),
+        API.getPortfolioSales()
       ]);
 
       const { positions, summary } = data;
       const tickerOpts = tickers.map(t => `<option value="${t.id}">${t.symbol} - ${t.name || ''}</option>`).join('');
       const fmtUsd = (v) => { const n = Number(v); return isNaN(n) ? '-' : n.toFixed(2); };
       const fmtArs = (v) => { const n = Number(v); return isNaN(n) ? '-' : '$' + n.toFixed(2); };
+      const fmtDate = (d) => { if (!d) return '-'; const dt = new Date(d); return dt.toLocaleDateString('es-AR', { year:'numeric', month:'2-digit', day:'2-digit' }); };
 
       const positionsHtml = positions.map(p => `
         <tr>
@@ -24,9 +26,23 @@ const PortfolioPage = {
             <small>(USD ${fmtUsd(p.gainLossUsd)})</small>
           </td>
           <td>
-            <button class="btn btn-sm btn-outline-info buy-more me-1" data-id="${p.id}" data-symbol="${p.symbol}" data-qty="${p.quantity}" data-avg="${p.avg_cost}"><i class="bi bi-cart-plus"></i></button>
-            <button class="btn btn-sm btn-outline-success sell-pos me-1" data-id="${p.id}" data-symbol="${p.symbol}" data-qty="${p.quantity}"><i class="bi bi-cash"></i></button>
+            <button class="btn btn-sm btn-outline-info buy-more me-1" data-id="${p.id}" data-symbol="${p.symbol}" data-qty="${p.quantity}" data-avg="${p.avg_cost}" data-price="${p.currentPrice}"><i class="bi bi-cart-plus"></i></button>
+            <button class="btn btn-sm btn-outline-success sell-pos me-1" data-id="${p.id}" data-symbol="${p.symbol}" data-qty="${p.quantity}" data-avg="${p.avg_cost}" data-price="${p.currentPrice}"><i class="bi bi-cash"></i></button>
             <button class="btn btn-sm btn-outline-danger delete-pos" data-id="${p.id}"><i class="bi bi-trash"></i></button>
+          </td>
+        </tr>
+      `).join('');
+
+      const salesHtml = salesRaw.map(s => `
+        <tr>
+          <td><a href="#/tickers?q=${s.symbol}" class="text-decoration-none">${s.symbol}</a></td>
+          <td>${s.quantity}</td>
+          <td>${fmtArs(s.purchasePrice)}</td>
+          <td>${fmtArs(s.salePrice)}</td>
+          <td>${fmtDate(s.purchase_date)}</td>
+          <td>${fmtDate(s.sale_date)}</td>
+          <td class="${s.gainLoss >= 0 ? 'text-success' : 'text-danger'} fw-bold">
+            ${s.gainLoss >= 0 ? '+' : ''}${fmtArs(s.gainLoss)} (${s.gainLossPercent?.toFixed(2)}%)
           </td>
         </tr>
       `).join('');
@@ -115,6 +131,22 @@ const PortfolioPage = {
         </div>
         ` : ''}
 
+        ${salesRaw.length > 0 ? `
+        <div class="card mt-4">
+          <div class="card-header"><i class="bi bi-clock-history"></i> Historial de Ventas</div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead><tr>
+                  <th>Simbolo</th><th>Cantidad</th><th>Precio Compra</th><th>Precio Venta</th><th>Fecha Compra</th><th>Fecha Venta</th><th>Ganancia</th>
+                </tr></thead>
+                <tbody>${salesHtml}</tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        ` : ''}
+
         <div class="modal fade" id="addPosModal">
           <div class="modal-dialog"><div class="modal-content">
             <div class="modal-header"><h5 class="modal-title">Agregar Posicion</h5><button class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
@@ -144,6 +176,20 @@ const PortfolioPage = {
             </div>
             <div class="modal-footer">
               <button class="btn btn-primary" id="saveBuyMoreBtn">Comprar</button>
+            </div>
+          </div></div>
+        </div>
+
+        <div class="modal fade" id="sellModal">
+          <div class="modal-dialog"><div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Vender <span id="sellSymbol"></span></h5><button class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+              <div class="alert alert-info py-1 px-2" id="sellInfo"></div>
+              <div class="mb-3"><label class="form-label">Cantidad</label><input type="number" class="form-control" id="sellQty"></div>
+              <div class="mb-3"><label class="form-label">Precio de venta (ARS)</label><input type="number" step="0.01" class="form-control" id="sellPrice"></div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-success" id="saveSellBtn">Vender</button>
             </div>
           </div></div>
         </div>
@@ -204,14 +250,25 @@ const PortfolioPage = {
     });
 
     document.querySelectorAll('.sell-pos').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const qty = prompt(`Cantidad a vender (max ${btn.dataset.qty}):`, btn.dataset.qty);
-        if (!qty) return;
-        try {
-          await API.sellPosition(btn.dataset.id, parseInt(qty));
-          this.render();
-        } catch (err) { alert(err.message); }
+      btn.addEventListener('click', () => {
+        document.getElementById('sellSymbol').textContent = btn.dataset.symbol;
+        document.getElementById('sellInfo').innerHTML = `Tenes <strong>${btn.dataset.qty}</strong> acciones | Costo prom. <strong>$${parseFloat(btn.dataset.avg).toFixed(2)}</strong> | Precio actual <strong>$${parseFloat(btn.dataset.price).toFixed(2)}</strong>`;
+        document.getElementById('sellQty').value = btn.dataset.qty;
+        document.getElementById('sellPrice').value = parseFloat(btn.dataset.price).toFixed(2);
+        document.getElementById('saveSellBtn').dataset.id = btn.dataset.id;
+        new bootstrap.Modal(document.getElementById('sellModal')).show();
       });
+    });
+    document.getElementById('saveSellBtn')?.addEventListener('click', async () => {
+      const id = document.getElementById('saveSellBtn').dataset.id;
+      const quantity = parseInt(document.getElementById('sellQty').value);
+      const sale_price = parseFloat(document.getElementById('sellPrice').value);
+      if (!quantity || !sale_price) return alert('Completa cantidad y precio');
+      try {
+        await API.sellPosition(id, quantity, sale_price);
+        bootstrap.Modal.getInstance(document.getElementById('sellModal')).hide();
+        this.render();
+      } catch (err) { alert(err.message); }
     });
   },
 

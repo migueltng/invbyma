@@ -10,7 +10,7 @@ Server on `http://0.0.0.0:3001`. Config in `.env` (DB, JWT, Telegram, NVIDIA API
 ```bash
 cd server && npm run init-db
 ```
-Executes `server/database/schema.sql` (9 tables + seed: admin/admin123 + 26 tickers). No migration system — schema changes go in that file.
+Executes `server/database/schema.sql` (9 tables + seed: admin/admin123 + 26 tickers). Use `npm run migrate` for safe schema changes (ALTERs) without data loss.
 
 ## Key architecture
 - **Monolith**: Express serves both `/api/*` and static `public/` SPA on same port
@@ -45,9 +45,15 @@ Only activates when `NODE_ENV=production` (`server.js:70-72`). Cron: every 15 mi
 | Yahoo Finance client | `server/services/marketData.js` |
 | SPA entry | `public/index.html` |
 | SPA router | `public/js/app.js` |
-| API client | `public/js/api.js` |
-| Page modules | `public/js/pages/*.js` (9 files) |
+| DB init | `server/database/init.js` |
+| DB migration | `server/database/migrate.js` |
+| DB migration (raw SQL) | `server/database/migrate_intraday.sql` |
+
+## DB migration
+- `npm run migrate` — runs `server/database/migrate.js` (safe ALTERs with backup + validation + rollback)
+- Migration scripts also available in `server/database/migrate_intraday.sql` (raw SQL)
 
 ## Common commands
 - `npm start` — start dev server
 - `npm run init-db` — reset database from schema.sql
+- `npm run migrate` — apply safe schema migration (DATE→DATETIME for price_history.date)

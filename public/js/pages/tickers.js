@@ -161,15 +161,15 @@ const TickersPage = {
     }
   },
 
-  async loadTickerDetail(symbol) {
+  async loadTickerDetail(symbol, range = '1y', interval = '1d') {
     const detailDiv = document.getElementById('tickerDetail');
     detailDiv.innerHTML = '<div class="text-center py-3"><div class="spinner-border"></div></div>';
     window.location.hash = '#/tickers?q=' + encodeURIComponent(symbol);
     try {
       const [quote, signals, history] = await Promise.all([
         API.getBymaQuote(symbol),
-        API.getSignals(symbol, '1y').catch(() => null),
-        API.getHistory(symbol, '1y', '1d').catch(() => [])
+        API.getSignals(symbol, range).catch(() => null),
+        API.getHistory(symbol, range, interval).catch(() => [])
       ]);
 
       const exchangeLabel = quote.exchange === 'BA' ? 'BYMA' : 'USD';
@@ -218,6 +218,14 @@ const TickersPage = {
             ${signals?.recommendation ? `<div class="alert ${signals.recommendation.action === 'COMPRA' ? 'alert-buy' : signals.recommendation.action === 'VENTA' ? 'alert-sell' : 'alert-neutral'} py-1 px-2 mb-2" style="background:transparent">${signals.recommendation.reason}${signals.recommendation.confidence === 'ALTA' ? ' (\u2605 Alta confianza)' : ''}</div>` : ''}
             <div class="row">
               <div class="col-md-8">
+                <div id="rangeButtons" class="d-flex flex-wrap gap-1 mb-2">
+                  <button class="btn btn-sm btn-outline-light range-btn" data-range="1d" data-interval="5m">1 Dia</button>
+                  <button class="btn btn-sm btn-outline-light range-btn" data-range="5d" data-interval="30m">1 Sem</button>
+                  <button class="btn btn-sm btn-outline-light range-btn" data-range="15d" data-interval="1h">15 Dias</button>
+                  <button class="btn btn-sm btn-outline-light range-btn" data-range="1mo" data-interval="1d">1 Mes</button>
+                  <button class="btn btn-sm btn-outline-light range-btn" data-range="6mo" data-interval="1d">6 Meses</button>
+                  <button class="btn btn-sm btn-outline-light range-btn" data-range="1y" data-interval="1d">1 Ano</button>
+                </div>
                 <div id="chartContainer" style="height:400px"></div>
               </div>
               <div class="col-md-4">
@@ -241,7 +249,7 @@ const TickersPage = {
                     <div class="card-body py-2">
                       <div class="d-flex justify-content-between"><span>SMA 20</span><span>${currencySymbol}${signals.sma20?.toFixed(2) || '-'}</span></div>
                       <div class="d-flex justify-content-between"><span>SMA 50</span><span>${currencySymbol}${signals.sma50?.toFixed(2) || '-'}</span></div>
-                      <div class="d-flex justify-content-between"><span>SMA 200</span><span>${currencySymbol}${signals.sma200?.toFixed(2) || '-'}</span></div>
+                      <div class="d-flex justify-content-between"><span>SMA 200</span><span>${signals.sma200 != null ? currencySymbol + signals.sma200.toFixed(2) : 'N/A'}</span></div>
                       <div class="d-flex justify-content-between"><span>EMA 20</span><span>${currencySymbol}${signals.ema20?.toFixed(2) || '-'}</span></div>
                     </div>
                   </div>
@@ -257,6 +265,25 @@ const TickersPage = {
                       <div class="d-flex justify-content-between"><span>Bollinger Lower</span><span>${currencySymbol}${signals.bollinger?.lower?.toFixed(2) || '-'}</span></div>
                     </div>
                   </div>
+                  <div class="card mb-2">
+                    <div class="card-header py-1">Fibonacci</div>
+                    <div class="card-body py-2">
+                      <div class="d-flex justify-content-between align-items-center"><span><span style="color:#787b86">&#9644;</span> 0%</span><span>Minimo</span></div>
+                      <div class="d-flex justify-content-between align-items-center"><span><span style="color:#f44336">&#9644;</span> 23.6%</span><span>38.2</span></div>
+                      <div class="d-flex justify-content-between align-items-center"><span><span style="color:#ff9800">&#9644;</span> 38.2%</span><span>50.0</span></div>
+                      <div class="d-flex justify-content-between align-items-center"><span><span style="color:#ffeb3b">&#9644;</span> 50%</span><span>Medio</span></div>
+                      <div class="d-flex justify-content-between align-items-center"><span><span style="color:#4caf50">&#9644;</span> 61.8%</span><span>61.8</span></div>
+                      <div class="d-flex justify-content-between align-items-center"><span><span style="color:#2196f3">&#9644;</span> 78.6%</span><span>78.6</span></div>
+                      <div class="d-flex justify-content-between align-items-center"><span><span style="color:#9c27b0">&#9644;</span> 100%</span><span>Maximo</span></div>
+                    </div>
+                  </div>
+                  <div class="card mb-2">
+                    <div class="card-header py-1">Lineas Ciclicas</div>
+                    <div class="card-body py-2">
+                      <div class="d-flex justify-content-between align-items-center"><span><span style="color:#e040fb">&#9644;</span> Periodo</span><span>20 dias</span></div>
+                      <div class="d-flex justify-content-between align-items-center"><span>Direccion</span><span>Diagonal ascendente</span></div>
+                    </div>
+                  </div>
                 ` : '<p class="text-muted">Sin datos de indicadores</p>'}
               </div>
             </div>
@@ -265,30 +292,46 @@ const TickersPage = {
       `;
       detailDiv.innerHTML = html;
 
-      if (history.length > 0) this.renderChart(history, signals);
+      document.querySelectorAll('#rangeButtons .range-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.range === range && btn.dataset.interval === interval);
+        btn.addEventListener('click', () => {
+          this.loadTickerDetail(symbol, btn.dataset.range, btn.dataset.interval);
+        });
+      });
+
+      if (history.length > 0) this.renderChart(history, signals, interval);
     } catch (err) {
       detailDiv.innerHTML = '<div class="alert alert-danger">Error: ' + err.message + '</div>';
     }
   },
 
-  renderChart(history, signals) {
+  renderChart(history, signals, interval = '1d') {
     const container = document.getElementById('chartContainer');
     if (!container) return;
+    const isIntraday = interval !== '1d';
 
     const controls = document.createElement('div');
     controls.className = 'd-flex flex-wrap gap-3 mb-2';
     controls.innerHTML = `
       <div class="form-check form-check-inline">
-        <input class="form-check-input" type="checkbox" id="chkSMA20" checked>
+        <input class="form-check-input" type="checkbox" id="chkSMA20">
         <label class="form-check-label" for="chkSMA20" style="color:#e91e63">SMA 20</label>
       </div>
       <div class="form-check form-check-inline">
-        <input class="form-check-input" type="checkbox" id="chkSMA50" checked>
+        <input class="form-check-input" type="checkbox" id="chkSMA50">
         <label class="form-check-label" for="chkSMA50" style="color:#2196f3">SMA 50</label>
       </div>
       <div class="form-check form-check-inline">
-        <input class="form-check-input" type="checkbox" id="chkSMA200" checked>
+        <input class="form-check-input" type="checkbox" id="chkSMA200">
         <label class="form-check-label" for="chkSMA200" style="color:#ff9800">SMA 200</label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="checkbox" id="chkFib">
+        <label class="form-check-label" for="chkFib" style="color:#00bcd4">Fibonacci</label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="checkbox" id="chkCyclic">
+        <label class="form-check-label" for="chkCyclic" style="color:#e040fb">Ciclicas</label>
       </div>
     `;
     container.parentNode.insertBefore(controls, container);
@@ -306,7 +349,7 @@ const TickersPage = {
     });
 
     const data = history.map(d => ({
-      time: d.date,
+      time: isIntraday ? d.timestamp : d.date,
       open: d.open,
       high: d.high,
       low: d.low,
@@ -327,22 +370,58 @@ const TickersPage = {
       return result;
     };
 
-    const toLineData = (arr) => history.map((d, i) => ({ time: d.date, value: arr[i] }));
+    const toLineData = (arr) => history.map((d, i) => ({ time: isIntraday ? d.timestamp : d.date, value: arr[i] }));
 
     const sma20Series = chart.addLineSeries({
-      color: '#e91e63', lineWidth: 1, priceLineVisible: false, lastValueVisible: false
+      color: '#e91e63', lineWidth: 1, priceLineVisible: false, lastValueVisible: false, visible: false
     });
     sma20Series.setData(toLineData(sma(closes, 20)));
 
     const sma50Series = chart.addLineSeries({
-      color: '#2196f3', lineWidth: 1, priceLineVisible: false, lastValueVisible: false
+      color: '#2196f3', lineWidth: 1, priceLineVisible: false, lastValueVisible: false, visible: false
     });
     sma50Series.setData(toLineData(sma(closes, 50)));
 
     const sma200Series = chart.addLineSeries({
-      color: '#ff9800', lineWidth: 1, priceLineVisible: false, lastValueVisible: false
+      color: '#ff9800', lineWidth: 1, priceLineVisible: false, lastValueVisible: false, visible: false
     });
     sma200Series.setData(toLineData(sma(closes, 200)));
+
+    const high = Math.max(...history.map(d => d.high));
+    const low = Math.min(...history.map(d => d.low));
+    const fibLevels = [
+      { pct: 0, color: '#787b86', label: '0%' },
+      { pct: 0.236, color: '#f44336', label: '23.6%' },
+      { pct: 0.382, color: '#ff9800', label: '38.2%' },
+      { pct: 0.5, color: '#ffeb3b', label: '50%' },
+      { pct: 0.618, color: '#4caf50', label: '61.8%' },
+      { pct: 0.786, color: '#2196f3', label: '78.6%' },
+      { pct: 1, color: '#9c27b0', label: '100%' }
+    ];
+    const fibSeries = [];
+    for (const level of fibLevels) {
+      const price = low + (high - low) * level.pct;
+      const series = chart.addLineSeries({
+        color: level.color, lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: false, visible: false
+      });
+      series.setData(history.map(d => ({ time: isIntraday ? d.timestamp : d.date, value: price })));
+      fibSeries.push(series);
+    }
+
+    const cyclicPeriod = 20;
+    const cyclicColor = '#e040fb';
+    const cyclicSeries = [];
+    for (let i = cyclicPeriod; i < data.length; i += cyclicPeriod) {
+      const time = data[i].time;
+      const series = chart.addLineSeries({
+        color: cyclicColor, lineWidth: 1, lineStyle: 2, priceLineVisible: false, lastValueVisible: false, visible: false
+      });
+      series.setData([
+        { time: data[i - cyclicPeriod].time, value: low },
+        { time: time, value: high }
+      ]);
+      cyclicSeries.push(series);
+    }
 
     document.getElementById('chkSMA20').addEventListener('change', e => {
       sma20Series.applyOptions({ visible: e.target.checked });
@@ -352,6 +431,12 @@ const TickersPage = {
     });
     document.getElementById('chkSMA200').addEventListener('change', e => {
       sma200Series.applyOptions({ visible: e.target.checked });
+    });
+    document.getElementById('chkFib').addEventListener('change', e => {
+      fibSeries.forEach(s => s.applyOptions({ visible: e.target.checked }));
+    });
+    document.getElementById('chkCyclic').addEventListener('change', e => {
+      cyclicSeries.forEach(s => s.applyOptions({ visible: e.target.checked }));
     });
 
     chart.timeScale().fitContent();

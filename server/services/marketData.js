@@ -118,8 +118,10 @@ async function fetchHistory(symbol, range = '1mo', interval = '1d') {
   const timestamps = result.timestamp;
   const quote = result.indicators.quote[0];
   const adjClose = result.indicators.adjclose ? result.indicators.adjclose[0].adjclose : null;
+  const isIntraday = interval !== '1d';
   return timestamps.map((t, i) => ({
-    date: new Date(t * 1000).toISOString().slice(0, 10),
+    timestamp: t,
+    date: isIntraday ? new Date(t * 1000).toISOString().slice(0, 16).replace('T', ' ') : new Date(t * 1000).toISOString().slice(0, 10),
     open: quote.open[i],
     high: quote.high[i],
     low: quote.low[i],

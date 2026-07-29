@@ -98,21 +98,62 @@ router.delete('/:id', authenticate, async (req, res) => {
 
 router.post('/:id/sell', authenticate, async (req, res) => {
   try {
-    const { quantity } = req.body;
+    const { quantity, sale_price } = req.body;
+    if (!sale_price) return res.status(400).json({ error: 'sale_price requerido' });
     const [positions] = await pool.execute(
-      'SELECT * FROM portfolio_positions WHERE id = ? AND user_id = ? ORDER BY purchase_date ASC',
+      'SELECT p.*, t.symbol FROM portfolio_positions p JOIN tickers t ON p.ticker_id = t.id WHERE p.id = ? AND p.user_id = ?',
       [req.params.id, req.user.id]
     );
     if (positions.length === 0) return res.status(404).json({ error: 'Posicion no encontrada' });
     const pos = positions[0];
     const remaining = parseFloat(pos.quantity) - parseFloat(quantity);
     if (remaining < 0) return res.status(400).json({ error: 'Cantidad insuficiente' });
+    await pool.execute(
+      `INSERT INTO portfolio_sales (user_id, ticker_id, symbol, quantity, purchase_price_ars, sale_price_ars, avg_cost_ars, purchase_date, sale_date)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURDATE())`,
+      [req.user.id, pos.ticker_id, pos.symbol, quantity, pos.avg_cost_ars, sale_price, pos.avg_cost_ars, pos.purchase_date]
+    );
     if (remaining === 0) {
       await pool.execute('DELETE FROM portfolio_positions WHERE id = ?', [pos.id]);
     } else {
       await pool.execute('UPDATE portfolio_positions SET quantity = ? WHERE id = ?', [remaining, pos.id]);
     }
-    res.json({ message: 'Venta registrada (FIFO)' });
+    res.json({ message: 'Venta registrada' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/sales', authenticate, async (req, res) => {
+  try {
+    const [sales] = await pool.execute(
+      `SELECT s.*, t.name as ticker_name, t.type
+       FROM portfolio_sales s
+       JOIN tickers t ON s.ticker_id = t.id
+       WHERE s.user_id = ?
+       ORDER BY s.sale_date DESC, s.created_at DESC`,
+      [req.user.id]
+    );
+    const enriched = sales.map(s => {
+      const qty = parseFloat(s.quantity);
+      const purchasePrice = parseFloat(s.purchase_price_ars);
+      const salePrice = parseFloat(s.sale_price_ars);
+      const totalCost = qty * purchasePrice;
+      const totalSale = qty * salePrice;
+      const gainLoss = totalSale - totalCost;
+      const gainLossPercent = purchasePrice > 0 ? ((salePrice - purchasePrice) / purchasePrice) * 100 : 0;
+      return {
+        ...s,
+        quantity: qty,
+        purchasePrice,
+        salePrice,
+        totalCost,
+        totalSale,
+        gainLoss,
+        gainLossPercent
+      };
+    });
+    res.json(enriched);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
