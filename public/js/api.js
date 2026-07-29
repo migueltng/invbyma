@@ -103,6 +103,10 @@ const API = (() => {
     getTelegramMessages: () => request('GET', '/telegram/messages'),
     sendTelegram: (message, chat_id) => request('POST', '/telegram/send', { message, chat_id }),
 
+    getMessagingStatus: () => request('GET', '/messaging-status'),
+
+    getNews: (symbol, limit) => request('GET', '/news/search?symbol=' + encodeURIComponent(symbol) + '&limit=' + (limit || 10)),
+
     getUsers: () => request('GET', '/admin/users'),
     toggleUserActive: (id) => request('PUT', '/admin/users/' + id + '/toggle-active'),
     resetPassword: (id) => request('PUT', '/admin/users/' + id + '/reset-password'),

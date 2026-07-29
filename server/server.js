@@ -16,6 +16,8 @@ const portfolioRoutes = require('./routes/portfolio');
 const adminRoutes = require('./routes/admin');
 const aiRoutes = require('./routes/ai');
 const telegramRoutes = require('./routes/telegram');
+const newsRoutes = require('./routes/news');
+const authenticate = require('./middleware/auth');
 
 const app = express();
 
@@ -50,9 +52,26 @@ app.use('/api/portfolio', portfolioRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/telegram', telegramRoutes);
+app.use('/api/news', newsRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+app.get('/api/messaging-status', authenticate, async (req, res) => {
+  try {
+    const token = process.env.TELEGRAM_BOT_TOKEN;
+    const [users] = await pool.execute('SELECT COUNT(*) as total, SUM(CASE WHEN telegram_chat_id IS NOT NULL AND telegram_chat_id != "" THEN 1 ELSE 0 END) as configured FROM users');
+    res.json({
+      telegram: {
+        configured: !!token,
+        usersConfigured: users[0].configured || 0,
+        totalUsers: users[0].total || 0
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 const frontendDir = path.join(__dirname, '..', 'public');

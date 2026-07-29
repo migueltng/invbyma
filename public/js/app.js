@@ -29,6 +29,59 @@ const App = (() => {
       API.logout();
       router();
     });
+
+    const changePwdModal = document.createElement('div');
+    changePwdModal.className = 'modal fade';
+    changePwdModal.id = 'changePasswordModal';
+    changePwdModal.innerHTML = `
+      <div class="modal-dialog"><div class="modal-content bg-dark">
+        <div class="modal-header"><h5 class="modal-title"><i class="bi bi-key"></i> Cambiar Clave</h5><button class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+          <div class="mb-3"><label class="form-label">Clave actual</label><input type="password" class="form-control" id="currentPassword"></div>
+          <div class="mb-3"><label class="form-label">Nueva clave</label><input type="password" class="form-control" id="newPassword" placeholder="min 6 caracteres"></div>
+          <div class="mb-3"><label class="form-label">Repetir nueva clave</label><input type="password" class="form-control" id="confirmPassword"></div>
+          <div id="pwdError" class="text-danger small"></div>
+          <div id="pwdSuccess" class="text-success small"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-success" id="savePasswordBtn">Guardar</button>
+        </div>
+      </div></div>
+    `;
+    document.body.appendChild(changePwdModal);
+
+    document.getElementById('changePasswordBtn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.getElementById('pwdError').textContent = '';
+      document.getElementById('pwdSuccess').textContent = '';
+      document.getElementById('currentPassword').value = '';
+      document.getElementById('newPassword').value = '';
+      document.getElementById('confirmPassword').value = '';
+      new bootstrap.Modal(document.getElementById('changePasswordModal')).show();
+    });
+
+    document.getElementById('savePasswordBtn')?.addEventListener('click', async () => {
+      const current = document.getElementById('currentPassword').value;
+      const pwd = document.getElementById('newPassword').value;
+      const confirm = document.getElementById('confirmPassword').value;
+      const errEl = document.getElementById('pwdError');
+      const okEl = document.getElementById('pwdSuccess');
+      errEl.textContent = '';
+      okEl.textContent = '';
+
+      if (!current || !pwd) { errEl.textContent = 'Completa todos los campos'; return; }
+      if (pwd.length < 6) { errEl.textContent = 'Minimo 6 caracteres'; return; }
+      if (pwd !== confirm) { errEl.textContent = 'Las claves no coinciden'; return; }
+
+      try {
+        await API.changePassword(current, pwd);
+        okEl.textContent = 'Clave actualizada!';
+        setTimeout(() => bootstrap.Modal.getInstance(document.getElementById('changePasswordModal'))?.hide(), 1500);
+      } catch (err) {
+        errEl.textContent = err.message;
+      }
+    });
+
     router();
   }
 
