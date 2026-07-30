@@ -64,6 +64,119 @@ const FEEDS = {
     urls: [
       'https://www.nasdaq.com/feed/rssoutbound?category=Markets'
     ]
+  },
+  infobae: {
+    name: 'Infobae',
+    urls: [
+      'https://www.infobae.com/arc/outboundfeeds/rss/',
+      'https://www.infobae.com/arc/outboundfeeds/rss/argentina/'
+    ]
+  },
+  ambito: {
+    name: 'Ámbito Financiero',
+    urls: [
+      'https://www.ambito.com/rss/pages/economia.xml',
+      'https://www.ambito.com/rss/pages/finanzas.xml'
+    ]
+  },
+  diariobitcoin: {
+    name: 'DiarioBitcoin',
+    urls: [
+      'https://www.diariobitcoin.com/feed/'
+    ]
+  },
+  fortune: {
+    name: 'Fortune',
+    urls: [
+      'https://fortune.com/feed/fortune-feeds/?id=3230629'
+    ]
+  },
+  wallstreetjournal: {
+    name: 'Wall Street Journal',
+    urls: [
+      'https://feeds.a.dj.com/rss/RSSMarketsMain.xml'
+    ]
+  },
+  economist: {
+    name: 'The Economist',
+    urls: [
+      'https://www.economist.com/finance-and-economics/rss.xml'
+    ]
+  },
+  lanacion: {
+    name: 'La Nación',
+    urls: [
+      'https://www.lanacion.com.ar/arc/outboundfeeds/rss/'
+    ]
+  },
+  sl24: {
+    name: 'Sl24',
+    urls: [
+      'https://sl24.com.ar/feed/'
+    ]
+  },
+  econojournal: {
+    name: 'EconoJournal',
+    urls: [
+      'https://econojournal.com.ar/feed/'
+    ]
+  },
+  shale24: {
+    name: 'Shale24',
+    urls: [
+      'https://www.shale24.com/feed/'
+    ]
+  },
+  eleconomista: {
+    name: 'El Economista',
+    urls: [
+      'https://eleconomista.com.ar/feed/'
+    ]
+  },
+  rionegro: {
+    name: 'Río Negro',
+    urls: [
+      'https://www.rionegro.com.ar/feed/'
+    ]
+  },
+  indymedia: {
+    name: 'Indymedia Argentina',
+    urls: [
+      'https://argentina.indymedia.org/feed/'
+    ]
+  },
+  alertadigital: {
+    name: 'Alerta Digital',
+    urls: [
+      'https://www.alertadigital.ar/rss/noticias/'
+    ]
+  },
+  pagina12: {
+    name: 'Página/12',
+    urls: [
+      'https://www.pagina12.com.ar/arc/outboundfeeds/rss/'
+    ]
+  },
+  lapoliticaonline: {
+    name: 'La Política Online',
+    urls: [
+      'https://www.lapoliticaonline.com/files/rss/ultimasnoticias-es.xml'
+    ]
+  },
+  estrategiasdeinversion: {
+    name: 'Estrategias de Inversión',
+    urls: [
+      'https://www.estrategiasdeinversion.com/rss/rssnoticias.xml'
+    ]
+  },
+  bbc: {
+    name: 'BBC',
+    urls: [
+      'https://feeds.bbci.co.uk/news/rss.xml',
+      'https://feeds.bbci.co.uk/news/world/rss.xml',
+      'https://feeds.bbci.co.uk/news/business/rss.xml',
+      'https://feeds.bbci.co.uk/news/technology/rss.xml'
+    ]
   }
 };
 
@@ -98,6 +211,9 @@ const SYMBOL_MAP = {
   'RIGO': ['RIGOL'],
   'RSEU': ['ROUSSEAU'],
   'SAMI': ['SAMI'],
+
+  'Merval': ['MERVAL', 'BURSATIL', 'BOLSA DE BUENOS AIRES', 'BYMA', 'RIESGO PAIS'],
+  'Dolar': ['DOLAR', 'DÓLAR', 'TIPO DE CAMBIO', 'BLUE', 'CCL', 'MEP', 'OFICIAL'],
 
   'AAPL': ['APPLE', 'APPLE INC'],
   'MSFT': ['MICROSOFT', 'MICROSOFT CORPORATION'],
