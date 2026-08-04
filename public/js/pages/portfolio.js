@@ -44,6 +44,7 @@ const PortfolioPage = {
           <td class="${s.gainLoss >= 0 ? 'text-success' : 'text-danger'} fw-bold">
             ${s.gainLoss >= 0 ? '+' : ''}${fmtArs(s.gainLoss)} (${s.gainLossPercent?.toFixed(2)}%)
           </td>
+          <td class="${s.gainLossNet >= 0 ? 'text-success' : 'text-danger'}">${fmtArs(s.gainLossNet)}</td>
         </tr>
       `).join('');
 
@@ -138,7 +139,7 @@ const PortfolioPage = {
             <div class="table-responsive">
               <table class="table table-hover mb-0">
                 <thead><tr>
-                  <th>Simbolo</th><th>Cantidad</th><th>Precio Compra</th><th>Precio Venta</th><th>Fecha Compra</th><th>Fecha Venta</th><th>Ganancia</th>
+                  <th>Simbolo</th><th>Cantidad</th><th>Precio Compra</th><th>Precio Venta</th><th>Fecha Compra</th><th>Fecha Venta</th><th>Ganancia</th><th>Ganancia - 2%</th>
                 </tr></thead>
                 <tbody>${salesHtml}</tbody>
               </table>

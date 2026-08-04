@@ -1,1 +1,33 @@
-en el portafolio agregar un cuadro que muestre la venta de mis acciones cronologicamente, el precio de compra y el precio de venta con la fecha de venta usar la tabla existente tabla portfolio_sales
+const { Stocks } = require('bullmarket');
+
+async function consultarAL30() {
+  try {
+    // Inicializamos el módulo de acciones/bonos
+    const stocks = new Stocks();
+
+    console.log('Consultando cotizaciones en tiempo real...');
+    
+    // Obtenemos todos los activos del merval en Contado Inmediato (ci) o Plazo Normal (24h)
+    const listadoBonos = await stocks.getStockPrices('merval', 'ci');
+
+    // Buscamos específicamente el bono AL30 dentro de la lista
+    const bonoAL30 = listadoBonos.find(activo => activo.ticker === 'AL30');
+
+    if (bonoAL30) {
+      console.log(`\n============================`);
+      console.log(`📊 ACTIVO: ${bonoAL30.ticker} - ${bonoAL30.description || 'Bono Soberano'}`);
+      console.log(`💰 Último Precio: $${bonoAL30.lastPrice}`);
+      console.log(`📈 Variación Diaria: ${bonoAL30.variation}%`);
+      console.log(`📉 Precio Máximo: $${bonoAL30.maxPrice}`);
+      console.log(`📉 Precio Mínimo: $${bonoAL30.minPrice}`);
+      console.log(`============================\n`);
+    } else {
+      console.log('No se encontró el ticker AL30 en esta rueda.');
+    }
+  } catch (error) {
+    console.error('Error al consultar la API:', error.message);
+  }
+}
+
+// Ejecutar la función
+consultarAL30();

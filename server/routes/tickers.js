@@ -109,7 +109,7 @@ router.get('/history/:symbol', authenticate, async (req, res) => {
     const history = await marketData.fetchHistory(req.params.symbol, range, interval);
     res.json(history);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(404).json({ error: err.message });
   }
 });
 
@@ -130,7 +130,7 @@ router.get('/signals/:symbol', authenticate, async (req, res) => {
     analysis.lastDate = history[history.length - 1].date;
     res.json(analysis);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(404).json({ error: err.message });
   }
 });
 
@@ -159,12 +159,32 @@ router.get('/cedears-search', authenticate, async (req, res) => {
   }
 });
 
+router.get('/bond-search', authenticate, async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q) return res.json([]);
+    const results = await marketData.searchBonds(q);
+    res.json(results);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.get('/usd-ars', authenticate, async (req, res) => {
   try {
     const data = await marketData.fetchUsdArs();
     res.json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/fundamentals/:symbol', authenticate, async (req, res) => {
+  try {
+    const fund = await marketData.fetchFundamentals(req.params.symbol);
+    res.json(fund);
+  } catch (err) {
+    res.status(404).json({ error: err.message, symbol: req.params.symbol });
   }
 });
 

@@ -71,7 +71,9 @@ const API = (() => {
     getHistory: (symbol, range, interval) => request('GET', '/tickers/history/' + encodeURIComponent(symbol) + '?range=' + (range || '1mo') + '&interval=' + (interval || '1d')),
     getSignals: (symbol, range) => request('GET', '/tickers/signals/' + encodeURIComponent(symbol) + '?range=' + (range || '3mo')),
     getBymaQuote: (symbol) => request('GET', '/tickers/byma-quote/' + encodeURIComponent(symbol)),
+    getFundamentals: (symbol) => request('GET', '/tickers/fundamentals/' + encodeURIComponent(symbol)),
     cedearsSearch: (q) => request('GET', '/tickers/cedears-search?q=' + encodeURIComponent(q)),
+    bondSearch: (q) => request('GET', '/tickers/bond-search?q=' + encodeURIComponent(q)),
     getUsdArs: () => request('GET', '/tickers/usd-ars'),
 
     getWatchlists: () => request('GET', '/watchlists'),

@@ -48,7 +48,7 @@ const AnalysisPage = {
 
         return `
           <tr>
-            <td><a href="#/tickers?q=${symbol}" class="text-decoration-none news-ticker" data-symbol="${symbol}">${symbol}</a></td>
+            <td><a href="#/tickers?q=${symbol}" class="text-decoration-none">${symbol}</a></td>
             <td>${formatNum(a.entry_price)}</td>
             <td>${currentPrice != null ? '<span class="fw-bold">' + formatNum(currentPrice) + '</span>' : '-'}</td>
             <td>${pnl !== null ? '<span class="' + pnlClass + ' fw-bold">' + (pnl >= 0 ? '+' : '') + pnl.toFixed(2) + '%</span>' : '-'}</td>
@@ -58,6 +58,7 @@ const AnalysisPage = {
             <td>${signalBadge[a.signal_type] || a.signal_type || '-'}</td>
             <td>${a.notes || ''}</td>
             <td>
+              <button class="btn btn-sm btn-outline-info news-ticker" data-symbol="${symbol}" title="Noticias y fundamentos"><i class="bi bi-graph-up-arrow"></i></button>
               <button class="btn btn-sm btn-outline-primary edit-analysis" data-id="${a.id}" data-ticker="${a.ticker_id}" data-entry="${a.entry_price}" data-sl="${a.stop_loss || ''}" data-target="${a.target_price || ''}" data-notes="${a.notes || ''}"><i class="bi bi-pencil"></i></button>
               <button class="btn btn-sm btn-outline-danger delete-analysis" data-id="${a.id}"><i class="bi bi-trash"></i></button>
             </td>
@@ -85,6 +86,15 @@ const AnalysisPage = {
                 </tr></thead>
                 <tbody>${rows || '<tr><td colspan="10" class="text-center text-muted">Sin analisis</td></tr>'}</tbody>
               </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-3">
+          <div class="card">
+            <div class="card-header"><span><i class="bi bi-graph-up"></i> Fundamentos</span></div>
+            <div class="card-body" id="fundamentalsContainer">
+              <div class="text-muted text-center py-2">Usa el boton<i class="bi bi-graph-up-arrow mx-1"></i>de la fila para ver PER, PEG, ingresos, ganancias, ROE, ROA y ROI</div>
             </div>
           </div>
         </div>
@@ -212,8 +222,51 @@ const AnalysisPage = {
       }
     };
 
+    const loadFundamentals = async (symbol) => {
+      const container = document.getElementById('fundamentalsContainer');
+      if (!container) return;
+      container.innerHTML = '<div class="text-center py-2"><div class="spinner-border spinner-border-sm"></div> Cargando fundamentos...</div>';
+      const fmtBig = (v) => {
+        const n = Number(v);
+        if (isNaN(n)) return '-';
+        if (Math.abs(n) >= 1e9) return '$' + (n / 1e9).toFixed(2) + 'B';
+        if (Math.abs(n) >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
+        return '$' + n.toFixed(2);
+      };
+      try {
+        const f = await API.getFundamentals(symbol);
+        const rows = [
+          ['PER (P/E)', f.pe != null ? f.pe.toFixed(2) : '-'],
+          ['PEG', f.peg != null ? f.peg.toFixed(2) : '-'],
+          ['Ingresos', fmtBig(f.revenue)],
+          ['Ganancias', fmtBig(f.netIncome)],
+          ['ROE', f.roe != null ? f.roe.toFixed(2) + '%' : '-'],
+          ['ROA', f.roa != null ? f.roa.toFixed(2) + '%' : '-'],
+          ['ROI', f.roi != null ? f.roi.toFixed(2) + '%' : '-']
+        ];
+        container.innerHTML = `
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <strong>${symbol}</strong>
+            <span class="badge bg-secondary">${f.currency || 'USD'}</span>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-sm table-striped mb-0">
+              <thead><tr><th>Metrica</th><th>Valor</th></tr></thead>
+              <tbody>${rows.map(r => `<tr><td>${r[0]}</td><td class="fw-bold">${r[1]}</td></tr>`).join('')}</tbody>
+            </table>
+          </div>`;
+      } catch (err) {
+        container.innerHTML = '<div class="text-muted text-center py-2">Fundamentos no disponibles para <strong>' + symbol + '</strong></div>';
+      }
+    };
+
     document.querySelectorAll('.news-ticker').forEach(btn => {
-      btn.addEventListener('click', () => loadNews(btn.dataset.symbol));
+      btn.addEventListener('click', () => {
+        loadNews(btn.dataset.symbol);
+        loadFundamentals(btn.dataset.symbol);
+        const box = document.getElementById('fundamentalsContainer');
+        if (box) box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
     });
 
     document.getElementById('newsSearchBtn')?.addEventListener('click', () => {

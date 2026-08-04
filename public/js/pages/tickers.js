@@ -5,7 +5,7 @@ const TickersPage = {
       API.getTickers()
     ]);
 
-    const tickerOptions = tickers.map(t => `<option value="${t.id}" data-symbol="${t.symbol}">${t.symbol} - ${t.name || ''}</option>`).join('');
+    const tickerOptions = tickers.map(t => `<option value="${t.id}" data-symbol="${t.symbol}" data-type="${t.type}">${t.symbol} - ${t.name || ''}</option>`).join('');
 
     const html = `
       <h4><i class="bi bi-search"></i> Busqueda de Tickers</h4>
@@ -53,7 +53,7 @@ const TickersPage = {
     document.getElementById('loadTickerBtn').addEventListener('click', () => {
       const sel = document.getElementById('tickerSelect');
       const opt = sel.options[sel.selectedIndex];
-      if (opt && opt.dataset.symbol) this.loadTickerDetail(opt.dataset.symbol);
+      if (opt && opt.dataset.symbol) this.loadTickerDetail(opt.dataset.symbol, undefined, undefined, opt.dataset.type);
     });
   },
 
@@ -64,9 +64,10 @@ const TickersPage = {
     window.location.hash = '#/tickers?q=' + encodeURIComponent(q);
 
     try {
-      const [yahooResults, cedearResults, localResults] = await Promise.all([
+      const [yahooResults, cedearResults, bondResults, localResults] = await Promise.all([
         API.yahooSearch(q).catch(() => []),
         API.cedearsSearch(q).catch(() => []),
+        API.bondSearch(q).catch(() => []),
         API.searchTickers(q).catch(() => [])
       ]);
 
@@ -95,6 +96,13 @@ const TickersPage = {
         }
       }
 
+      for (const r of bondResults) {
+        if (!seen.has(r.symbol)) {
+          seen.add(r.symbol);
+          combined.push({ ...r, source: 'bond' });
+        }
+      }
+
       if (!combined.length) {
         resultsDiv.innerHTML = '<div class="text-muted">Sin resultados</div>';
         return;
@@ -102,9 +110,10 @@ const TickersPage = {
 
       const bymaExchanges = ['BA', 'BCBA', 'BUE'];
       resultsDiv.innerHTML = combined.map(r => {
-        const isBymaBA = bymaExchanges.includes(r.exchange);
-        const isCedearWithByma = r.bymaAvailable;
-        const isPlainUS = !isBymaBA && !isCedearWithByma;
+        const isBond = r.type === 'BONO';
+        const isBymaBA = bymaExchanges.includes(r.exchange) && !isBond;
+        const isCedearWithByma = r.bymaAvailable && !isBond;
+        const isPlainUS = !isBond && !isBymaBA && !isCedearWithByma;
 
         return `
           <div class="card mb-2">
@@ -113,28 +122,35 @@ const TickersPage = {
                 <div>
                   <strong>${r.symbol}</strong>
                   <small class="text-muted ms-2">${r.name || ''}</small>
+                  ${isBond ? '<span class="badge bg-warning ms-2" style="color:#0d1117">BONO</span>' : ''}
                   ${isBymaBA ? '<span class="badge bg-info ms-2">BYMA</span>' : ''}
                   ${isCedearWithByma ? '<span class="badge bg-success ms-2">CEDEAR en BYMA</span>' : ''}
                   ${isPlainUS ? `<span class="badge bg-secondary ms-2">${r.exchange}</span>` : ''}
                 </div>
                 <div class="text-end">
+                  ${isBond ? `
+                    <div>
+                      <button class="btn btn-sm btn-outline-primary load-ticker me-1" data-symbol="${r.symbol}" data-type="${r.type}">Ver</button>
+                      <button class="btn btn-sm btn-outline-success add-ticker" data-symbol="${r.symbol}" data-name="${r.name}" data-type="BONO">Agregar</button>
+                    </div>
+                  ` : ''}
                   ${isBymaBA ? `
                     <div>
-                      <button class="btn btn-sm btn-outline-primary load-ticker me-1" data-symbol="${r.symbol}">Ver</button>
-                      <button class="btn btn-sm btn-outline-success add-ticker" data-symbol="${r.symbol}" data-name="${r.name}" data-type="ACCION">Agregar</button>
+                      <button class="btn btn-sm btn-outline-primary load-ticker me-1" data-symbol="${r.symbol}" data-type="${r.type || 'ACCION'}">Ver</button>
+                      <button class="btn btn-sm btn-outline-success add-ticker" data-symbol="${r.symbol}" data-name="${r.name}" data-type="${r.type || 'ACCION'}">Agregar</button>
                     </div>
                   ` : ''}
                   ${isCedearWithByma ? `
                     <div class="fw-bold text-success">BYMA: $${r.bymaPrice?.toFixed(2)} <small class="${r.bymaChange >= 0 ? 'text-success' : 'text-danger'}">${r.bymaChange >= 0 ? '+' : ''}${r.bymaChange?.toFixed(2)}%</small></div>
                     <div class="mt-1">
-                      <button class="btn btn-sm btn-outline-primary load-ticker me-1" data-symbol="${r.symbol}">Ver en BYMA</button>
+                      <button class="btn btn-sm btn-outline-primary load-ticker me-1" data-symbol="${r.symbol}" data-type="CEDEAR">Ver en BYMA</button>
                       <button class="btn btn-sm btn-outline-success add-ticker" data-symbol="${r.symbol}" data-name="${r.name}" data-type="CEDEAR">Agregar CEDEAR</button>
                     </div>
                   ` : ''}
                   ${isPlainUS ? `
                     ${r.usdPrice ? `<div class="text-muted small">USD: $${r.usdPrice?.toFixed(2)}</div>` : '<div class="text-muted small">Sin cotizacion BYMA</div>'}
                     <div class="mt-1">
-                      <button class="btn btn-sm btn-outline-primary load-ticker" data-symbol="${r.symbol}">Ver cotizacion USD</button>
+                      <button class="btn btn-sm btn-outline-primary load-ticker" data-symbol="${r.symbol}" data-type="ACCION">Ver cotizacion USD</button>
                     </div>
                   ` : ''}
                 </div>
@@ -145,7 +161,7 @@ const TickersPage = {
       }).join('');
 
       document.querySelectorAll('.load-ticker').forEach(btn => {
-        btn.addEventListener('click', () => this.loadTickerDetail(btn.dataset.symbol));
+        btn.addEventListener('click', () => this.loadTickerDetail(btn.dataset.symbol, undefined, undefined, btn.dataset.type));
       });
       document.querySelectorAll('.add-ticker').forEach(btn => {
         btn.addEventListener('click', async () => {
@@ -161,15 +177,30 @@ const TickersPage = {
     }
   },
 
-  async loadTickerDetail(symbol, range = '1y', interval = '1d') {
+  async fetchHistoryWithFallback(symbol, range, interval) {
+    const fallbackRanges = [range, '2y', '1y', '6mo', '3mo', '1mo'];
+    for (const r of fallbackRanges) {
+      try {
+        const data = await API.getHistory(symbol, r, interval);
+        if (data && data.length > 0) return data;
+      } catch {}
+    }
+    return [];
+  },
+
+  async loadTickerDetail(symbol, range = '5y', interval = '1d', type = null) {
     const detailDiv = document.getElementById('tickerDetail');
     detailDiv.innerHTML = '<div class="text-center py-3"><div class="spinner-border"></div></div>';
     window.location.hash = '#/tickers?q=' + encodeURIComponent(symbol);
+
+    if (type === 'BONO' && ['5y', '4y', '3y', '2y'].includes(range)) {
+      range = '1y';
+    }
     try {
       const [quote, signals, history] = await Promise.all([
         API.getBymaQuote(symbol),
-        API.getSignals(symbol, range).catch(() => null),
-        API.getHistory(symbol, range, interval).catch(() => [])
+        API.getSignals(symbol, '1y').catch(() => null),
+        this.fetchHistoryWithFallback(symbol, range, interval)
       ]);
 
       const exchangeLabel = quote.exchange === 'BA' ? 'BYMA' : 'USD';
@@ -219,12 +250,12 @@ const TickersPage = {
             <div class="row">
               <div class="col-md-8">
                 <div id="rangeButtons" class="d-flex flex-wrap gap-1 mb-2">
-                  <button class="btn btn-sm btn-outline-light range-btn" data-range="1d" data-interval="5m">1 Dia</button>
-                  <button class="btn btn-sm btn-outline-light range-btn" data-range="5d" data-interval="30m">1 Sem</button>
-                  <button class="btn btn-sm btn-outline-light range-btn" data-range="15d" data-interval="1h">15 Dias</button>
-                  <button class="btn btn-sm btn-outline-light range-btn" data-range="1mo" data-interval="1d">1 Mes</button>
-                  <button class="btn btn-sm btn-outline-light range-btn" data-range="6mo" data-interval="1d">6 Meses</button>
-                  <button class="btn btn-sm btn-outline-light range-btn" data-range="1y" data-interval="1d">1 Ano</button>
+                  <button class="btn btn-sm btn-outline-light range-btn" data-range="5d" data-interval="5m">5m</button>
+                  <button class="btn btn-sm btn-outline-light range-btn" data-range="1mo" data-interval="30m">30m</button>
+                  <button class="btn btn-sm btn-outline-light range-btn" data-range="3mo" data-interval="1h">1h</button>
+                  <button class="btn btn-sm btn-outline-light range-btn" data-range="5y" data-interval="1d">1d</button>
+                  <button class="btn btn-sm btn-outline-light range-btn" data-range="5y" data-interval="1wk">1w</button>
+                  <button class="btn btn-sm btn-outline-light range-btn" data-range="5y" data-interval="1mo">1mo</button>
                 </div>
                 <div id="chartContainer" style="height:400px"></div>
               </div>
@@ -292,6 +323,30 @@ const TickersPage = {
       `;
       detailDiv.innerHTML = html;
 
+      const rangeTable = `
+        <div class="card mt-3">
+          <div class="card-header"><i class="bi bi-table"></i> Segmentacion de Lapsos</div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover mb-0 table-sm">
+                <thead><tr>
+                  <th>Boton</th><th>Range</th><th>Intervalo</th><th>Velas</th>
+                </tr></thead>
+                <tbody>
+                  <tr><td>5m</td><td>5d</td><td>5m</td><td>Intradia</td></tr>
+                  <tr><td>30m</td><td>1mo</td><td>30m</td><td>Intradia</td></tr>
+                  <tr><td>1h</td><td>3mo</td><td>1h</td><td>Intradia</td></tr>
+                  <tr><td>1d</td><td>5y</td><td>1d</td><td>Diaria</td></tr>
+                  <tr><td>1w</td><td>5y</td><td>1wk</td><td>Semanal</td></tr>
+                  <tr><td>1mo</td><td>5y</td><td>1mo</td><td>Mensual</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+      detailDiv.insertAdjacentHTML('beforeend', rangeTable);
+
       document.querySelectorAll('#rangeButtons .range-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.range === range && btn.dataset.interval === interval);
         btn.addEventListener('click', () => {
@@ -308,7 +363,7 @@ const TickersPage = {
   renderChart(history, signals, interval = '1d') {
     const container = document.getElementById('chartContainer');
     if (!container) return;
-    const isIntraday = interval !== '1d';
+    const isIntraday = !['1d', '1wk', '1mo'].includes(interval);
 
     const controls = document.createElement('div');
     controls.className = 'd-flex flex-wrap gap-3 mb-2';

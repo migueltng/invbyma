@@ -18,6 +18,7 @@ const aiRoutes = require('./routes/ai');
 const telegramRoutes = require('./routes/telegram');
 const newsRoutes = require('./routes/news');
 const authenticate = require('./middleware/auth');
+const pool = require('./config/db');
 
 const app = express();
 

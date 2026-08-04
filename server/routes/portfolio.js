@@ -141,6 +141,7 @@ router.get('/sales', authenticate, async (req, res) => {
       const totalCost = qty * purchasePrice;
       const totalSale = qty * salePrice;
       const gainLoss = totalSale - totalCost;
+      const gainLossNet = gainLoss - (0.02 * totalSale);
       const gainLossPercent = purchasePrice > 0 ? ((salePrice - purchasePrice) / purchasePrice) * 100 : 0;
       return {
         ...s,
@@ -150,6 +151,7 @@ router.get('/sales', authenticate, async (req, res) => {
         totalCost,
         totalSale,
         gainLoss,
+        gainLossNet,
         gainLossPercent
       };
     });
