@@ -54,7 +54,7 @@ router.get('/', authenticate, async (req, res) => {
       }
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
@@ -70,7 +70,7 @@ router.post('/', authenticate, async (req, res) => {
     );
     res.status(201).json({ id: result.insertId, message: 'Posicion agregada' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
@@ -83,7 +83,7 @@ router.put('/:id', authenticate, async (req, res) => {
     );
     res.json({ message: 'Posicion actualizada' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
@@ -92,7 +92,7 @@ router.delete('/:id', authenticate, async (req, res) => {
     await pool.execute('DELETE FROM portfolio_positions WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
     res.json({ message: 'Posicion eliminada' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
@@ -127,7 +127,7 @@ router.post('/:id/sell', authenticate, async (req, res) => {
     }
     res.json({ message: 'Venta registrada' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
@@ -153,7 +153,7 @@ router.post('/:id/buy', authenticate, async (req, res) => {
     );
     res.json({ message: 'Compra registrada, precio promedio actualizado', newAvg, totalQty });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
@@ -170,7 +170,7 @@ router.get('/sales', authenticate, async (req, res) => {
     );
     res.json(sales);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 

@@ -19,7 +19,7 @@ router.get('/', authenticate, async (req, res) => {
     }));
     res.json(result);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
@@ -30,7 +30,7 @@ router.post('/', authenticate, async (req, res) => {
     const [result] = await pool.execute('INSERT INTO watchlists (user_id, name) VALUES (?, ?)', [req.user.id, name]);
     res.status(201).json({ id: result.insertId, name, items: [] });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
@@ -42,7 +42,7 @@ router.post('/:id/items', authenticate, async (req, res) => {
     await pool.execute('INSERT IGNORE INTO watchlist_items (watchlist_id, ticker_id) VALUES (?, ?)', [req.params.id, ticker_id]);
     res.status(201).json({ message: 'Ticker agregado a watchlist' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
@@ -54,7 +54,7 @@ router.delete('/:id/items/:tickerId', authenticate, async (req, res) => {
     );
     res.json({ message: 'Ticker removido de watchlist' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
@@ -63,7 +63,7 @@ router.delete('/:id', authenticate, async (req, res) => {
     await pool.execute('DELETE FROM watchlists WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
     res.json({ message: 'Watchlist eliminada' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 

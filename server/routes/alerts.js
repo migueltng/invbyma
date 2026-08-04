@@ -16,7 +16,7 @@ router.get('/', authenticate, async (req, res) => {
     );
     res.json(alerts);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
@@ -30,6 +30,9 @@ router.post('/', authenticate, async (req, res) => {
     if (!validTypes.includes(alert_type)) {
       return res.status(400).json({ error: 'Tipo de alerta invalido' });
     }
+    if (threshold !== null && threshold !== undefined && (isNaN(Number(threshold)) || Number(threshold) < 0)) {
+      return res.status(400).json({ error: 'Threshold invalido' });
+    }
     const [result] = await pool.execute(
       'INSERT INTO alerts (user_id, ticker_id, alert_type, threshold, is_active) VALUES (?, ?, ?, ?, 1)',
       [req.user.id, ticker_id, alert_type, threshold || null]
@@ -40,7 +43,7 @@ router.post('/', authenticate, async (req, res) => {
     );
     res.status(201).json(alert[0]);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
@@ -49,7 +52,7 @@ router.delete('/:id', authenticate, async (req, res) => {
     await pool.execute('DELETE FROM alerts WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
     res.json({ message: 'Alerta eliminada' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
@@ -61,7 +64,7 @@ router.put('/:id/toggle', authenticate, async (req, res) => {
     );
     res.json({ message: 'Alerta actualizada' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 

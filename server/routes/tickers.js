@@ -10,7 +10,7 @@ router.get('/', authenticate, async (req, res) => {
     const [tickers] = await pool.execute('SELECT * FROM tickers WHERE is_active = 1 ORDER BY symbol');
     res.json(tickers);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
@@ -24,7 +24,7 @@ router.get('/search', authenticate, async (req, res) => {
     );
     res.json(tickers);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
@@ -35,7 +35,7 @@ router.get('/yahoo-search', authenticate, async (req, res) => {
     const results = await marketData.searchYahoo(q);
     res.json(results);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
@@ -56,7 +56,7 @@ router.post('/', authenticate, async (req, res) => {
     );
     res.status(201).json({ message: 'Ticker agregado' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
@@ -65,7 +65,7 @@ router.put('/:id/deactivate', authenticate, async (req, res) => {
     await pool.execute('UPDATE tickers SET is_active = 0 WHERE id = ?', [req.params.id]);
     res.json({ message: 'Ticker desactivado' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
@@ -74,7 +74,7 @@ router.get('/quote/:symbol', authenticate, async (req, res) => {
     const quote = await marketData.fetchQuote(req.params.symbol);
     res.json(quote);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
@@ -86,7 +86,7 @@ router.get('/quotes', authenticate, async (req, res) => {
     const quotes = results.filter(r => r.status === 'fulfilled').map(r => r.value);
     res.json(quotes);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
@@ -97,7 +97,7 @@ router.get('/all-quotes', authenticate, async (req, res) => {
     const quotes = results.filter(r => r.status === 'fulfilled').map(r => r.value);
     res.json(quotes);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
@@ -108,7 +108,7 @@ router.get('/history/:symbol', authenticate, async (req, res) => {
     const history = await marketData.fetchHistory(req.params.symbol, range, interval);
     res.json(history);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
@@ -129,7 +129,7 @@ router.get('/signals/:symbol', authenticate, async (req, res) => {
     analysis.lastDate = history[history.length - 1].date;
     res.json(analysis);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
@@ -154,7 +154,7 @@ router.get('/cedears-search', authenticate, async (req, res) => {
     const results = await marketData.cedearsSearch(q);
     res.json(results);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
@@ -163,7 +163,7 @@ router.get('/usd-ars', authenticate, async (req, res) => {
     const data = await marketData.fetchUsdArs();
     res.json(data);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 

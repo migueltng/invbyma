@@ -1,6 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const authenticate = require('../middleware/auth');
+const logger = require('../services/logger');
 
 const router = express.Router();
 
@@ -39,8 +40,8 @@ y decisiones de trading. Proporciona respuestas concisas y basadas en datos.`;
 
     res.json({ response: data.choices[0].message.content });
   } catch (err) {
-    const msg = err.response?.data?.error?.message || err.message;
-    res.status(500).json({ error: `Error consultando IA: ${msg}` });
+    logger.error('AI', `Error consultando IA: ${err.response?.data?.error?.message || err.message}`);
+    res.status(500).json({ error: 'Error consultando el servicio de IA' });
   }
 });
 

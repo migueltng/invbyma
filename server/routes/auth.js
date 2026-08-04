@@ -4,16 +4,23 @@ const jwt = require('jsonwebtoken');
 const pool = require('../config/db');
 const logger = require('../services/logger');
 const authenticate = require('../middleware/auth');
+const { getJwtSecret } = require('../config/secrets');
+const { createRateLimiter } = require('../services/rateLimit');
 
 const router = express.Router();
 
-router.post('/login', async (req, res) => {
+const loginLimiter = createRateLimiter({ windowMs: 15 * 60 * 1000, max: 20 });
+const registerLimiter = createRateLimiter({ windowMs: 60 * 60 * 1000, max: 10 });
+
+const USERNAME_RE = /^[a-zA-Z0-9._-]{3,50}$/;
+
+router.post('/login', loginLimiter, async (req, res) => {
   try {
     const { username, password } = req.body;
-    if (!username || !password) {
+    if (typeof username !== 'string' || typeof password !== 'string' || !username || !password) {
       return res.status(400).json({ error: 'Username y password requeridos' });
     }
-    const [users] = await pool.execute('SELECT * FROM users WHERE username = ?', [username]);
+    const [users] = await pool.execute('SELECT * FROM users WHERE username = ?', [username.trim()]);
     if (users.length === 0) {
       logger.auth(`Login fallido: ${username} no existe`);
       return res.status(401).json({ error: 'Credenciales invalidas' });
@@ -30,7 +37,7 @@ router.post('/login', async (req, res) => {
     }
     const token = jwt.sign(
       { id: user.id, username: user.username, role: user.role },
-      process.env.JWT_SECRET || 'secret',
+      getJwtSecret(),
       { expiresIn: '24h' }
     );
     logger.auth(`Login exitoso: ${username}`);
@@ -41,20 +48,24 @@ router.post('/login', async (req, res) => {
   }
 });
 
-router.post('/register', async (req, res) => {
+router.post('/register', registerLimiter, async (req, res) => {
   try {
     const { username, password } = req.body;
-    if (!username || !password || password.length < 6) {
-      return res.status(400).json({ error: 'Username y password (min 6 caracteres) requeridos' });
+    if (typeof username !== 'string' || typeof password !== 'string' || !username || !password || password.length < 8) {
+      return res.status(400).json({ error: 'Username requerido y password (min 8 caracteres)' });
     }
-    const [existing] = await pool.execute('SELECT id FROM users WHERE username = ?', [username]);
+    const cleanUsername = username.trim();
+    if (!USERNAME_RE.test(cleanUsername)) {
+      return res.status(400).json({ error: 'Username invalido: solo letras, numeros, punto, guion o underscore (3-50 caracteres)' });
+    }
+    const [existing] = await pool.execute('SELECT id FROM users WHERE username = ?', [cleanUsername]);
     if (existing.length > 0) {
       return res.status(400).json({ error: 'El usuario ya existe' });
     }
     const hashed = await bcrypt.hash(password, 10);
     await pool.execute('INSERT INTO users (username, password, role, is_active) VALUES (?, ?, ?, ?)',
-      [username, hashed, 'user', process.env.NODE_ENV === 'production' ? 0 : 1]);
-    logger.auth(`Usuario registrado: ${username}`);
+      [cleanUsername, hashed, 'user', process.env.NODE_ENV === 'production' ? 0 : 1]);
+    logger.auth(`Usuario registrado: ${cleanUsername}`);
     res.status(201).json({ message: 'Usuario registrado. Espera aprobacion del admin.' });
   } catch (err) {
     logger.error('AUTH', `Error en registro: ${err.message}`);
@@ -75,7 +86,10 @@ router.get('/me', authenticate, async (req, res) => {
 router.put('/chat-id', authenticate, async (req, res) => {
   try {
     const { chat_id } = req.body;
-    await pool.execute('UPDATE users SET telegram_chat_id = ? WHERE id = ?', [chat_id, req.user.id]);
+    if (chat_id !== null && chat_id !== undefined && String(chat_id).length > 50) {
+      return res.status(400).json({ error: 'Chat ID invalido' });
+    }
+    await pool.execute('UPDATE users SET telegram_chat_id = ? WHERE id = ?', [chat_id || null, req.user.id]);
     logger.auth(`Chat ID actualizado: ${req.user.username} -> ${chat_id}`);
     res.json({ message: 'Chat ID actualizado' });
   } catch (err) {
@@ -86,6 +100,9 @@ router.put('/chat-id', authenticate, async (req, res) => {
 router.put('/password', authenticate, async (req, res) => {
   try {
     const { current_password, new_password } = req.body;
+    if (!current_password || !new_password || new_password.length < 8) {
+      return res.status(400).json({ error: 'New password (min 8 caracteres) requerido' });
+    }
     const [users] = await pool.execute('SELECT password FROM users WHERE id = ?', [req.user.id]);
     const valid = await bcrypt.compare(current_password, users[0].password);
     if (!valid) return res.status(400).json({ error: 'Password actual incorrecto' });

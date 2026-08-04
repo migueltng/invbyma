@@ -122,7 +122,7 @@ const DashboardPage = {
       `;
       App.render(html);
     } catch (err) {
-      App.render('<div class="alert alert-danger">Error cargando dashboard: ' + err.message + '</div>');
+      App.render('<div class="alert alert-danger">Error cargando dashboard</div>');
     }
   }
 };

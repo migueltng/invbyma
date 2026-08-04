@@ -1,6 +1,17 @@
 const App = (() => {
   let currentRoute = '';
 
+  function escapeHtml(value) {
+    if (value === null || value === undefined) return '';
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;')
+      .replace(/`/g, '&#96;');
+  }
+
   function showNav(show) {
     document.getElementById('mainNav').style.display = show ? 'flex' : 'none';
   }
@@ -95,7 +106,7 @@ const App = (() => {
           render('<div class="alert alert-warning">Pagina no encontrada</div>');
       }
     } catch (err) {
-      render('<div class="alert alert-danger">Error: ' + err.message + '</div>');
+      render('<div class="alert alert-danger">Error inesperado</div>');
     } finally {
       showLoading(false);
     }

@@ -4,9 +4,9 @@ const AdminPage = {
       const users = await API.getUsers();
       const rows = users.map(u => `
         <tr>
-          <td>${u.username}</td>
-          <td><span class="badge ${u.role === 'admin' ? 'bg-danger' : 'bg-info'}">${u.role}</span></td>
-          <td>${u.chat_id || '-'}</td>
+          <td>${App.escapeHtml(u.username)}</td>
+          <td><span class="badge ${u.role === 'admin' ? 'bg-danger' : 'bg-info'}">${App.escapeHtml(u.role)}</span></td>
+          <td>${App.escapeHtml(u.chat_id) || '-'}</td>
           <td>
             <span class="badge ${u.is_active ? 'bg-success' : 'bg-secondary'}">
               ${u.is_active ? 'Activo' : 'Inactivo'}
@@ -21,7 +21,7 @@ const AdminPage = {
             <button class="btn btn-sm btn-outline-info change-role" data-id="${u.id}" data-role="${u.role}">
               ${u.role === 'admin' ? 'Hacer User' : 'Hacer Admin'}
             </button>
-            <button class="btn btn-sm btn-outline-secondary set-chat" data-id="${u.id}" data-chat="${u.chat_id || ''}">
+            <button class="btn btn-sm btn-outline-secondary set-chat" data-id="${u.id}" data-chat="${App.escapeHtml(u.chat_id || '')}">
               <i class="bi bi-telegram"></i>
             </button>
           </td>
@@ -46,7 +46,7 @@ const AdminPage = {
       App.render(html);
       this.bind();
     } catch (err) {
-      App.render('<div class="alert alert-danger">' + err.message + '</div>');
+      App.render('<div class="alert alert-danger">Error cargando usuarios</div>');
     }
   },
 

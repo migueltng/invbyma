@@ -10,7 +10,7 @@ Server on `http://0.0.0.0:3001` (PORT/HOST from `.env`, defaults 3001/0.0.0.0). 
 ```bash
 cd server && npm run init-db
 ```
-Executes `server/database/schema.sql` (10 tables + seed: admin/admin123 + 26 tickers). No migration system — schema changes go in that file. `init.js` connects WITHOUT `DB_NAME` and uses `multipleStatements: true` so the script can `CREATE DATABASE` and seed in one shot.
+Executes `server/database/schema.sql` (10 tables + seed: admin/ByMaAdm1n + 26 tickers). No migration system — schema changes go in that file. `init.js` connects WITHOUT `DB_NAME` and uses `multipleStatements: true` so the script can `CREATE DATABASE` and seed in one shot. NOTE: `init-db` WIPES the DB; it will not update an already-seeded admin password.
 
 ## Key architecture
 - **Monolith**: Express serves both `/api/*` and static `public/` SPA on same port
@@ -19,10 +19,18 @@ Executes `server/database/schema.sql` (10 tables + seed: admin/admin123 + 26 tic
 - **DB**: MySQL via `mysql2/promise` connection pool in `server/config/db.js`
 
 ## Auth quirks
-- New users: `is_active = 0` in production, `1` in development (`routes/auth.js:56`)
-- Admin reset-password: resets to `123456` (hardcoded `routes/admin.js:33`)
-- Schema seeds `admin` with bcrypt hash of `admin123`
-- `JWT_SECRET` falls back to literal `'secret'` if unset (`routes/auth.js`, `middleware/auth.js`)
+- New users: `is_active = 0` in production, `1` in development (`routes/auth.js`)
+- Admin reset-password: resets to `123456` (hardcoded `routes/admin.js`)
+- Schema seeds `admin` with bcrypt hash of `ByMaAdm1n`
+- `JWT_SECRET` is **fail-closed**: no default fallback. Server 500s if unset or <32 chars (`config/secrets.js`, used by `routes/auth.js` and `middleware/auth.js`)
+- `/login` and `/register` are rate-limited in-memory (20/15min and 10/hour per IP, `services/rateLimit.js`)
+- Register requires min 8-char password and username matching `^[a-zA-Z0-9._-]{3,50}$`
+
+## Security (do not regress)
+- `.env` is **NOT tracked by git** (see `.gitignore`); copy `server/.env.example` → `server/.env`. `server/.env` was historically committed with real credentials — never commit it again
+- Server sends security headers (nosniff, DENY framing, no-referrer, permissions-policy) and `express.json({ limit: '100kb' })` (`server.js`)
+- Route catch blocks return generic `Error del servidor` — do not echo `err.message` to clients
+- Frontend must escape all user-controlled data before injecting into `innerHTML` (use `App.escapeHtml`, `public/js/app.js`)
 
 ## API pattern
 All authenticated endpoints need `Authorization: Bearer <token>`. The frontend `api.js` auto-redirects to `#/login` on 401.

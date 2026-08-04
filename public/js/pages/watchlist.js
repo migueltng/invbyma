@@ -6,12 +6,12 @@ const WatchlistPage = {
         API.getTickers()
       ]);
 
-      const tickerOpts = tickers.map(t => `<option value="${t.id}">${t.symbol} - ${t.name || ''}</option>`).join('');
+      const tickerOpts = tickers.map(t => `<option value="${t.id}">${App.escapeHtml(t.symbol)} - ${App.escapeHtml(t.name) || ''}</option>`).join('');
 
       const wlHtml = watchlists.map(w => `
         <div class="card mb-3">
           <div class="card-header d-flex justify-content-between align-items-center">
-            <span><i class="bi bi-eye"></i> ${w.name}</span>
+            <span><i class="bi bi-eye"></i> ${App.escapeHtml(w.name)}</span>
             <div>
               <button class="btn btn-sm btn-outline-danger delete-wl" data-id="${w.id}"><i class="bi bi-trash"></i></button>
             </div>
@@ -19,7 +19,7 @@ const WatchlistPage = {
           <div class="card-body">
             ${w.items.length ? w.items.map(item => `
               <div class="d-flex justify-content-between align-items-center py-1 border-bottom border-secondary">
-                <a href="#/tickers?q=${item.symbol}" class="text-decoration-none">${item.symbol}</a>
+                <a href="#/tickers?q=${encodeURIComponent(item.symbol)}" class="text-decoration-none">${App.escapeHtml(item.symbol)}</a>
                 <button class="btn btn-sm btn-outline-danger remove-item" data-wl="${w.id}" data-ticker="${item.id}"><i class="bi bi-x"></i></button>
               </div>
             `).join('') : '<p class="text-muted mb-0">Sin tickers</p>'}
@@ -46,7 +46,7 @@ const WatchlistPage = {
       App.render(html);
       this.bind();
     } catch (err) {
-      App.render('<div class="alert alert-danger">' + err.message + '</div>');
+      App.render('<div class="alert alert-danger">Error cargando watchlists</div>');
     }
   },
 

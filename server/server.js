@@ -22,7 +22,7 @@ const app = express();
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
 app.use(cors({
   origin: (origin, cb) => {
-    if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+    if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
       cb(null, true);
     } else {
       cb(new Error('Not allowed by CORS'));
@@ -31,7 +31,16 @@ app.use(cors({
   credentials: true
 }));
 
-app.use(express.json());
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Permissions-Policy', "camera=(), microphone=(), geolocation=()");
+  next();
+});
+
+app.use(express.json({ limit: '100kb' }));
 
 app.use((req, res, next) => {
   const start = Date.now();

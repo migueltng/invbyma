@@ -5,7 +5,7 @@ const TickersPage = {
       API.getTickers()
     ]);
 
-    const tickerOptions = tickers.map(t => `<option value="${t.id}" data-symbol="${t.symbol}">${t.symbol} - ${t.name || ''}</option>`).join('');
+    const tickerOptions = tickers.map(t => `<option value="${t.id}" data-symbol="${App.escapeHtml(t.symbol)}">${App.escapeHtml(t.symbol)} - ${App.escapeHtml(t.name) || ''}</option>`).join('');
 
     const html = `
       <h4><i class="bi bi-search"></i> Busqueda de Tickers</h4>
@@ -13,7 +13,7 @@ const TickersPage = {
         <div class="col-md-8">
           <div class="input-group">
             <span class="input-group-text"><i class="bi bi-search"></i></span>
-            <input type="text" class="form-control" id="tickerSearch" placeholder="Buscar ticker BYMA o CEDEAR internacional (ej: GGAL, AAPL, GFI, JNJ, NVDA)..." value="${symbol}">
+            <input type="text" class="form-control" id="tickerSearch" placeholder="Buscar ticker BYMA o CEDEAR internacional (ej: GGAL, AAPL, GFI, JNJ, NVDA)..." value="${App.escapeHtml(symbol)}">
             <button class="btn btn-primary" id="tickerSearchBtn">Buscar</button>
           </div>
           <div class="mt-1">
@@ -111,8 +111,8 @@ const TickersPage = {
             <div class="card-body py-2">
               <div class="d-flex justify-content-between align-items-center">
                 <div>
-                  <strong>${r.symbol}</strong>
-                  <small class="text-muted ms-2">${r.name || ''}</small>
+                  <strong>${App.escapeHtml(r.symbol)}</strong>
+                  <small class="text-muted ms-2">${App.escapeHtml(r.name) || ''}</small>
                   ${isBymaBA ? '<span class="badge bg-info ms-2">BYMA</span>' : ''}
                   ${isCedearWithByma ? '<span class="badge bg-success ms-2">CEDEAR en BYMA</span>' : ''}
                   ${isPlainUS ? `<span class="badge bg-secondary ms-2">${r.exchange}</span>` : ''}
@@ -120,21 +120,21 @@ const TickersPage = {
                 <div class="text-end">
                   ${isBymaBA ? `
                     <div>
-                      <button class="btn btn-sm btn-outline-primary load-ticker me-1" data-symbol="${r.symbol}">Ver</button>
-                      <button class="btn btn-sm btn-outline-success add-ticker" data-symbol="${r.symbol}" data-name="${r.name}" data-type="ACCION">Agregar</button>
+                      <button class="btn btn-sm btn-outline-primary load-ticker me-1" data-symbol="${App.escapeHtml(r.symbol)}">Ver</button>
+                      <button class="btn btn-sm btn-outline-success add-ticker" data-symbol="${App.escapeHtml(r.symbol)}" data-name="${App.escapeHtml(r.name)}" data-type="ACCION">Agregar</button>
                     </div>
                   ` : ''}
                   ${isCedearWithByma ? `
                     <div class="fw-bold text-success">BYMA: $${r.bymaPrice?.toFixed(2)} <small class="${r.bymaChange >= 0 ? 'text-success' : 'text-danger'}">${r.bymaChange >= 0 ? '+' : ''}${r.bymaChange?.toFixed(2)}%</small></div>
                     <div class="mt-1">
-                      <button class="btn btn-sm btn-outline-primary load-ticker me-1" data-symbol="${r.symbol}">Ver en BYMA</button>
-                      <button class="btn btn-sm btn-outline-success add-ticker" data-symbol="${r.symbol}" data-name="${r.name}" data-type="CEDEAR">Agregar CEDEAR</button>
+                      <button class="btn btn-sm btn-outline-primary load-ticker me-1" data-symbol="${App.escapeHtml(r.symbol)}">Ver en BYMA</button>
+                      <button class="btn btn-sm btn-outline-success add-ticker" data-symbol="${App.escapeHtml(r.symbol)}" data-name="${App.escapeHtml(r.name)}" data-type="CEDEAR">Agregar CEDEAR</button>
                     </div>
                   ` : ''}
                   ${isPlainUS ? `
                     ${r.usdPrice ? `<div class="text-muted small">USD: $${r.usdPrice?.toFixed(2)}</div>` : '<div class="text-muted small">Sin cotizacion BYMA</div>'}
                     <div class="mt-1">
-                      <button class="btn btn-sm btn-outline-primary load-ticker" data-symbol="${r.symbol}">Ver cotizacion USD</button>
+                      <button class="btn btn-sm btn-outline-primary load-ticker" data-symbol="${App.escapeHtml(r.symbol)}">Ver cotizacion USD</button>
                     </div>
                   ` : ''}
                 </div>
@@ -157,7 +157,7 @@ const TickersPage = {
         });
       });
     } catch (err) {
-      resultsDiv.innerHTML = '<div class="text-danger">' + err.message + '</div>';
+      resultsDiv.innerHTML = '<div class="text-danger">Error buscando tickers</div>';
     }
   },
 
@@ -267,7 +267,7 @@ const TickersPage = {
 
       if (history.length > 0) this.renderChart(history, signals);
     } catch (err) {
-      detailDiv.innerHTML = '<div class="alert alert-danger">Error: ' + err.message + '</div>';
+      detailDiv.innerHTML = '<div class="alert alert-danger">Error cargando detalle del ticker</div>';
     }
   },
 

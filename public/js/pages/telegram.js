@@ -11,10 +11,10 @@ const TelegramPage = {
       const rows = messages.map(m => `
         <tr>
           <td>${new Date(m.sent_at).toLocaleString('es-AR')}</td>
-          <td><span class="badge ${typeBadge[m.type] || 'bg-secondary'}">${m.type}</span></td>
-          <td style="max-width:400px;white-space:pre-wrap">${m.message}</td>
-          <td>${m.chat_id || '-'}</td>
-          <td>${m.username || 'Sistema'}</td>
+          <td><span class="badge ${typeBadge[m.type] || 'bg-secondary'}">${App.escapeHtml(m.type)}</span></td>
+          <td style="max-width:400px;white-space:pre-wrap">${App.escapeHtml(m.message)}</td>
+          <td>${App.escapeHtml(m.chat_id) || '-'}</td>
+          <td>${App.escapeHtml(m.username) || 'Sistema'}</td>
         </tr>
       `).join('');
 
@@ -44,7 +44,7 @@ const TelegramPage = {
       App.render(html);
       this.bind();
     } catch (err) {
-      App.render('<div class="alert alert-danger">' + err.message + '</div>');
+      App.render('<div class="alert alert-danger">Error cargando mensajes de Telegram</div>');
     }
   },
 
@@ -59,7 +59,7 @@ const TelegramPage = {
         document.getElementById('telegramMsg').value = '';
         setTimeout(() => this.render(), 1000);
       } catch (err) {
-        document.getElementById('telegramResult').innerHTML = '<span class="text-danger">' + err.message + '</span>';
+        document.getElementById('telegramResult').innerHTML = '<span class="text-danger">Error enviando mensaje</span>';
       }
     });
   }

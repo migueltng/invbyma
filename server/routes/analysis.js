@@ -16,7 +16,7 @@ router.get('/', authenticate, async (req, res) => {
     );
     res.json(analyses);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
@@ -39,7 +39,7 @@ router.post('/', authenticate, async (req, res) => {
     );
     res.status(201).json(analysis[0]);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
@@ -64,7 +64,7 @@ router.put('/:id', authenticate, async (req, res) => {
     );
     res.json(analysis[0]);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
@@ -73,7 +73,7 @@ router.delete('/:id', authenticate, async (req, res) => {
     await pool.execute('DELETE FROM analyses WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
     res.json({ message: 'Analisis eliminado' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 

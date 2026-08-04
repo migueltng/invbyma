@@ -8,13 +8,13 @@ const PortfolioPage = {
       ]);
 
       const { positions, summary } = data;
-      const tickerOpts = tickers.map(t => `<option value="${t.id}">${t.symbol} - ${t.name || ''}</option>`).join('');
+      const tickerOpts = tickers.map(t => `<option value="${t.id}">${App.escapeHtml(t.symbol)} - ${App.escapeHtml(t.name) || ''}</option>`).join('');
       const fmtUsd = (v) => { const n = Number(v); return isNaN(n) ? '-' : n.toFixed(2); };
       const fmtArs = (v) => { const n = Number(v); return isNaN(n) ? '-' : '$' + n.toFixed(2); };
 
       const positionsHtml = positions.map(p => `
         <tr>
-          <td><a href="#/tickers?q=${p.symbol}" class="text-decoration-none">${p.symbol}</a></td>
+          <td><a href="#/tickers?q=${encodeURIComponent(p.symbol)}" class="text-decoration-none">${App.escapeHtml(p.symbol)}</a></td>
           <td>${p.quantity}</td>
           <td>${fmtArs(p.avg_cost)}</td>
           <td>${fmtArs(p.currentPrice)}</td>
@@ -156,7 +156,7 @@ const PortfolioPage = {
       document.getElementById('posDate').value = new Date().toISOString().slice(0, 10);
       document.getElementById('buyMoreDate').value = new Date().toISOString().slice(0, 10);
     } catch (err) {
-      App.render('<div class="alert alert-danger">' + err.message + '</div>');
+      App.render('<div class="alert alert-danger">Error cargando portafolio</div>');
     }
   },
 
@@ -185,7 +185,7 @@ const PortfolioPage = {
     document.querySelectorAll('.buy-more').forEach(btn => {
       btn.addEventListener('click', () => {
         document.getElementById('buyMoreSymbol').textContent = btn.dataset.symbol;
-        document.getElementById('buyMoreInfo').innerHTML = `Actual: <strong>${btn.dataset.qty}</strong> acciones a <strong>$${parseFloat(btn.dataset.avg).toFixed(2)}</strong> promedio`;
+        document.getElementById('buyMoreInfo').innerHTML = `Actual: <strong>${App.escapeHtml(btn.dataset.qty)}</strong> acciones a <strong>$${parseFloat(btn.dataset.avg).toFixed(2)}</strong> promedio`;
         document.getElementById('buyMoreQty').value = '';
         document.getElementById('buyMorePrice').value = '';
         document.getElementById('saveBuyMoreBtn').dataset.id = btn.dataset.id;
@@ -241,7 +241,7 @@ const PortfolioPage = {
           <span style="display:inline-block;width:14px;height:14px;background:${colors[i]};border-radius:3px;margin-right:8px;flex-shrink:0"></span>
           <div class="flex-grow-1">
             <div class="d-flex justify-content-between">
-              <strong>${p.symbol}</strong>
+              <strong>${App.escapeHtml(p.symbol)}</strong>
               <span>${pct.toFixed(1)}%</span>
             </div>
             <small class="text-muted">$${p.marketValue.toFixed(2)} ARS <span class="ms-2">USD ${p.marketValueUsd.toFixed(2)}</span></small>

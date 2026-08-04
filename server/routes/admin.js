@@ -13,7 +13,7 @@ router.get('/users', async (req, res) => {
     const [users] = await pool.execute('SELECT id, username, role, telegram_chat_id as chat_id, is_active, created_at FROM users ORDER BY created_at DESC');
     res.json(users);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
@@ -24,7 +24,7 @@ router.put('/users/:id/toggle-active', async (req, res) => {
     await pool.execute('UPDATE users SET is_active = NOT is_active WHERE id = ?', [req.params.id]);
     res.json({ message: 'Estado actualizado' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
@@ -34,28 +34,34 @@ router.put('/users/:id/reset-password', async (req, res) => {
     await pool.execute('UPDATE users SET password = ? WHERE id = ?', [hashed, req.params.id]);
     res.json({ message: 'Password reseteado a 123456' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
 router.put('/users/:id/role', async (req, res) => {
   try {
+    const [user] = await pool.execute('SELECT id, role FROM users WHERE id = ?', [req.params.id]);
+    if (user.length === 0) return res.status(404).json({ error: 'Usuario no encontrado' });
+    if (user[0].role === 'admin') return res.status(400).json({ error: 'No puede quitar el rol admin al ultimo administrador' });
     const { role } = req.body;
     if (!['admin', 'user'].includes(role)) return res.status(400).json({ error: 'Rol invalido' });
     await pool.execute('UPDATE users SET role = ? WHERE id = ?', [role, req.params.id]);
     res.json({ message: 'Rol actualizado' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
 router.put('/users/:id/chat-id', async (req, res) => {
   try {
     const { chat_id } = req.body;
+    if (chat_id !== null && chat_id !== undefined && String(chat_id).length > 50) {
+      return res.status(400).json({ error: 'Chat ID invalido' });
+    }
     await pool.execute('UPDATE users SET telegram_chat_id = ? WHERE id = ?', [chat_id || null, req.params.id]);
     res.json({ message: 'Chat ID actualizado' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 

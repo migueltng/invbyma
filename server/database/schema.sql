@@ -161,5 +161,5 @@ INSERT INTO tickers (symbol, name, type, market, currency) VALUES
 ('GD30', 'Bonos Globales 2030', 'BONO', 'BYMA', 'ARS');
 
 INSERT INTO users (username, password, role, is_active) VALUES
-('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'admin', 1)
+('admin', '$2a$10$Mcqk4A2ugduPbNQ8JX46telDzDrx.5/gLB46LON53zkZr2e.DeCZm', 'admin', 1)
 ON DUPLICATE KEY UPDATE username=username;

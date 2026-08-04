@@ -35,7 +35,7 @@ const AIPage = {
       input.value = '';
       error.textContent = '';
 
-      messages.innerHTML += `<div class="text-end mb-2"><span class="badge bg-primary">${text}</span></div>`;
+      messages.innerHTML += `<div class="text-end mb-2"><span class="badge bg-primary">${App.escapeHtml(text)}</span></div>`;
       messages.innerHTML += `<div class="mb-2"><span class="badge bg-secondary"><div class="spinner-border spinner-border-sm"></div> Pensando...</span></div>`;
       messages.scrollTop = messages.scrollHeight;
 
@@ -43,11 +43,11 @@ const AIPage = {
         const res = await API.aiChat(text);
         const msgDiv = messages.querySelector('.spinner-border')?.closest('.badge');
         if (msgDiv) msgDiv.parentElement.remove();
-        messages.innerHTML += `<div class="mb-2"><span class="badge bg-secondary" style="white-space:pre-wrap">${res.response}</span></div>`;
+        messages.innerHTML += `<div class="mb-2"><span class="badge bg-secondary" style="white-space:pre-wrap">${App.escapeHtml(res.response)}</span></div>`;
       } catch (err) {
         const msgDiv = messages.querySelector('.spinner-border')?.closest('.badge');
         if (msgDiv) msgDiv.parentElement.remove();
-        error.textContent = err.message;
+        error.textContent = 'Error consultando IA';
       }
       messages.scrollTop = messages.scrollHeight;
     }

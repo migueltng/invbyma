@@ -6,7 +6,7 @@ const AnalysisPage = {
         API.getTickers()
       ]);
 
-      const tickerOpts = tickers.map(t => `<option value="${t.id}">${t.symbol} - ${t.name || ''}</option>`).join('');
+      const tickerOpts = tickers.map(t => `<option value="${t.id}">${App.escapeHtml(t.symbol)} - ${App.escapeHtml(t.name) || ''}</option>`).join('');
 
       const signalBadge = {
         'COMPRA': '<span class="badge bg-success">COMPRA</span>',
@@ -23,15 +23,15 @@ const AnalysisPage = {
 
       const rows = analyses.map(a => `
         <tr>
-          <td><a href="#/tickers?q=${a.symbol}" class="text-decoration-none">${a.symbol}</a></td>
+          <td><a href="#/tickers?q=${encodeURIComponent(a.symbol)}" class="text-decoration-none">${App.escapeHtml(a.symbol)}</a></td>
           <td>${formatNum(a.entry_price)}</td>
           <td>${a.stop_loss ? formatNum(a.stop_loss) : '-'}</td>
           <td>${a.target_price ? formatNum(a.target_price) : '-'}</td>
           <td>${formatRR(a.target_price, a.stop_loss, a.entry_price)}</td>
           <td>${signalBadge[a.signal_type] || a.signal_type || '-'}</td>
-          <td>${a.notes || ''}</td>
+          <td>${App.escapeHtml(a.notes) || ''}</td>
           <td>
-            <button class="btn btn-sm btn-outline-primary edit-analysis" data-id="${a.id}" data-ticker="${a.ticker_id}" data-entry="${a.entry_price}" data-sl="${a.stop_loss || ''}" data-target="${a.target_price || ''}" data-notes="${a.notes || ''}"><i class="bi bi-pencil"></i></button>
+            <button class="btn btn-sm btn-outline-primary edit-analysis" data-id="${a.id}" data-ticker="${a.ticker_id}" data-entry="${a.entry_price}" data-sl="${a.stop_loss || ''}" data-target="${a.target_price || ''}" data-notes="${App.escapeHtml(a.notes || '')}"><i class="bi bi-pencil"></i></button>
             <button class="btn btn-sm btn-outline-danger delete-analysis" data-id="${a.id}"><i class="bi bi-trash"></i></button>
           </td>
         </tr>
@@ -75,7 +75,7 @@ const AnalysisPage = {
       App.render(html);
       this.bind();
     } catch (err) {
-      App.render('<div class="alert alert-danger">' + err.message + '</div>');
+      App.render('<div class="alert alert-danger">Error cargando analisis</div>');
     }
   },
 

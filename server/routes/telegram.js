@@ -18,7 +18,7 @@ router.get('/messages', authenticate, async (req, res) => {
     );
     res.json(messages);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
@@ -32,7 +32,7 @@ router.post('/send', authenticate, async (req, res) => {
     if (ok) return res.json({ message: 'Mensaje enviado' });
     res.status(500).json({ error: 'Error enviando mensaje' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
